@@ -23,7 +23,7 @@ func (f *FileRepository) getData(ctx context.Context) (string, error) {
 	}
 	data, err := os.ReadFile(f.path)
 	if err != nil {
-		panic(err)
+		logrus.Debug("error reading file")
 		return "", err
 	}
 	f.data = string(data)
