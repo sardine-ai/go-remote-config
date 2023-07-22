@@ -32,7 +32,7 @@ func (f *FileRepository) getData(ctx context.Context) (string, error) {
 }
 
 func (f *FileRepository) getType() string {
-	return "file"
+	return "fs"
 }
 
 func (f *FileRepository) getPath() string {

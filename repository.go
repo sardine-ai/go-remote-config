@@ -15,7 +15,7 @@ type Repository interface {
 
 func NewRepository(repoType string) (Repository, error) {
 	switch repoType {
-	case "file":
+	case "fs":
 		if *path == "" {
 			logrus.Fatal("path is required")
 		}
@@ -28,7 +28,7 @@ func NewRepository(repoType string) (Repository, error) {
 			logrus.Fatal("URL is required")
 		}
 		return NewGitRepository(*URL, *path)
-	case "web":
+	case "http":
 		if *URL == "" {
 			logrus.Fatal("URL is required")
 		}

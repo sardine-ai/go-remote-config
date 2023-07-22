@@ -50,7 +50,7 @@ func (w *WebRepository) getData(ctx context.Context) (string, error) {
 }
 
 func (w *WebRepository) getType() string {
-	return "web"
+	return "http"
 }
 
 func (w *WebRepository) getPath() string {
