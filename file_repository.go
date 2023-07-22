@@ -1,7 +1,7 @@
 package main
 
 import (
-	"errors"
+	"context"
 	"github.com/sirupsen/logrus"
 	"net/url"
 	"os"
@@ -16,18 +16,11 @@ type FileRepository struct {
 	url               *url.URL
 }
 
-func (f *FileRepository) getData() (string, error) {
+func (f *FileRepository) getData(ctx context.Context) (string, error) {
 	if ((time.Now().Unix() - f.lastUpdateSeconds) < 10) && f.data != "" {
-		logrus.Debug("returning cached file")
+		logrus.WithContext(ctx).Debug("returning cached file")
 		return f.data, nil
 	}
-	isValid := isValidYAMLFile(f.data)
-
-	if !isValid {
-
-		return f.data, errors.New("invalid yaml file")
-	}
-
 	data, err := os.ReadFile(f.path)
 	if err != nil {
 		panic(err)

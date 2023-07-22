@@ -1,12 +1,13 @@
 package main
 
 import (
-	"errors"
+	"context"
+	"github.com/sirupsen/logrus"
 	"net/url"
 )
 
 type Repository interface {
-	getData() (string, error)
+	getData(ctx context.Context) (string, error)
 	getType() string
 	getPath() string
 	getUrl() *url.URL
@@ -15,12 +16,23 @@ type Repository interface {
 func NewRepository(repoType string) (Repository, error) {
 	switch repoType {
 	case "file":
+		if *path == "" {
+			logrus.Fatal("path is required")
+		}
 		return NewFileRepository(*path)
 	case "git":
+		if *path == "" {
+			logrus.Fatal("path is required")
+		}
 		if *URL == "" {
-			return nil, errors.New("url is required for git repositories")
+			logrus.Fatal("URL is required")
 		}
 		return NewGitRepository(*URL, *path)
+	case "web":
+		if *URL == "" {
+			logrus.Fatal("URL is required")
+		}
+		return NewWebRepository(*URL)
 	default:
 		return NewFileRepository(*path)
 	}

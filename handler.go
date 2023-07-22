@@ -6,11 +6,17 @@ import (
 	"net/http"
 )
 
-var output string
-
 func ReadRemoteConfig(w http.ResponseWriter, r *http.Request) {
-	response, err := repository.getData()
+	response, err := repository.getData(r.Context())
 	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	isValid := isValidYAMLFile(response)
+
+	if !isValid {
+		logrus.WithError(err).Error("error validating yaml")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

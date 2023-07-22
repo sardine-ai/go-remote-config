@@ -4,11 +4,8 @@ import (
 	"flag"
 	"github.com/go-http-utils/etag"
 	"github.com/sirupsen/logrus"
-	gorm "gorm.io/gorm"
 	"net/http"
 )
-
-var db *gorm.DB
 
 var authKey = flag.String("auth_key", "", "auth key for the server")
 
@@ -23,17 +20,20 @@ var repository Repository
 func main() {
 	flag.Parse()
 	var err error
-	if *path == "" {
-		logrus.Fatal("path is required")
-	}
 	repository, err = NewRepository(*repoType)
 	if err != nil {
 		logrus.WithError(err).Fatal("error creating repository")
 	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", MainHandler)
-
-	http.ListenAndServe(":8080", etag.Handler(mux, false))
+	handler := etag.Handler(mux, false)
+	if *authKey != "" {
+		handler = Auth(handler, *authKey)
+	}
+	err = http.ListenAndServe(":8090", etag.Handler(mux, false))
+	if err != nil {
+		logrus.WithError(err).Fatal("error starting server")
+	}
 }
 
 func MainHandler(w http.ResponseWriter, r *http.Request) {

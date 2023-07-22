@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/go-git/go-billy/v5"
 	"github.com/go-git/go-billy/v5/memfs"
@@ -28,7 +29,7 @@ func (g *GitRepository) getUrl() *url.URL {
 	return g.url
 }
 
-func (g *GitRepository) getData() (string, error) {
+func (g *GitRepository) getData(ctx context.Context) (string, error) {
 	if ((time.Now().Unix() - g.lastUpdateSeconds) < 10) && g.data != "" {
 		logrus.Debug("returning cached file")
 		return g.data, nil
@@ -36,23 +37,32 @@ func (g *GitRepository) getData() (string, error) {
 
 	if g.fs == nil {
 		g.fs = memfs.New()
+		logrus.Debugf("Cloning %s into memory", g.url.String())
 		// Clone the Git repository
-		r, err := git.Clone(memory.NewStorage(), g.fs, &git.CloneOptions{
+		r, err := git.CloneContext(ctx, memory.NewStorage(), g.fs, &git.CloneOptions{
 			URL: g.url.String(),
 		})
 		if err != nil {
 			return "", err
 		}
+		logrus.Debug("Cloned")
 		g.repo = r
 	} else {
+
 		// Pull the latest changes from the Git repository
 		w, err := g.repo.Worktree()
 		if err != nil {
 			return "", err
 		}
-		err = w.Pull(&git.PullOptions{})
+		logrus.Debug("Pulling")
+		err = w.PullContext(ctx, &git.PullOptions{})
 		if err != nil && err != git.NoErrAlreadyUpToDate {
 			return "", err
+		}
+		if err == git.NoErrAlreadyUpToDate {
+			logrus.Debug("Already up to date")
+		} else {
+			logrus.Debug("Pulled")
 		}
 	}
 
