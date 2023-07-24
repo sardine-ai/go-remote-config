@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/divakarmanoj/go-remote-config-server/source"
 )
 
 func TestReadRemoteConfig(t *testing.T) {
