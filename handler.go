@@ -7,7 +7,7 @@ import (
 )
 
 func ReadRemoteConfig(w http.ResponseWriter, r *http.Request) {
-	response, err := repository.getData(r.Context())
+	response, err := repository.GetData(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

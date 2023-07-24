@@ -1,4 +1,4 @@
-package main
+package source
 
 import (
 	"context"
@@ -18,7 +18,7 @@ type GCSRepository struct {
 	key               string
 }
 
-func (g *GCSRepository) getData(ctx context.Context) (string, error) {
+func (g *GCSRepository) GetData(ctx context.Context) (string, error) {
 	if ((time.Now().Unix() - g.lastUpdateSeconds) < 10) && g.data != "" {
 		logrus.Debug("returning cached file")
 		return g.data, nil
@@ -55,15 +55,15 @@ func (g *GCSRepository) getData(ctx context.Context) (string, error) {
 	return g.data, nil
 }
 
-func (g *GCSRepository) getType() string {
+func (g *GCSRepository) GetType() string {
 	return "gcs"
 }
 
-func (g *GCSRepository) getPath() string {
+func (g *GCSRepository) GetPath() string {
 	return g.bucket + "/" + g.key
 }
 
-func (g *GCSRepository) getUrl() *url.URL {
+func (g *GCSRepository) GetUrl() *url.URL {
 	return nil
 }
 

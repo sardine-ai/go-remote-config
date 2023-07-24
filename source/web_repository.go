@@ -1,4 +1,4 @@
-package main
+package source
 
 import (
 	"context"
@@ -15,7 +15,7 @@ type WebRepository struct {
 	url               *url.URL
 }
 
-func (w *WebRepository) getData(ctx context.Context) (string, error) {
+func (w *WebRepository) GetData(ctx context.Context) (string, error) {
 	if ((time.Now().Unix() - w.lastUpdateSeconds) < 10) && w.data != "" {
 		logrus.Debug("returning cached file")
 		return w.data, nil
@@ -49,15 +49,15 @@ func (w *WebRepository) getData(ctx context.Context) (string, error) {
 	return w.data, nil
 }
 
-func (w *WebRepository) getType() string {
+func (w *WebRepository) GetType() string {
 	return "http"
 }
 
-func (w *WebRepository) getPath() string {
+func (w *WebRepository) GetPath() string {
 	return w.url.String()
 }
 
-func (w *WebRepository) getUrl() *url.URL {
+func (w *WebRepository) GetUrl() *url.URL {
 	return w.url
 }
 

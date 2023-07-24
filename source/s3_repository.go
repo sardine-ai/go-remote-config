@@ -1,4 +1,4 @@
-package main
+package source
 
 import (
 	"context"
@@ -20,7 +20,7 @@ type S3Repository struct {
 	region            string
 }
 
-func (s *S3Repository) getData(ctx context.Context) (string, error) {
+func (s *S3Repository) GetData(ctx context.Context) (string, error) {
 	if ((time.Now().Unix() - s.lastUpdateSeconds) < 10) && s.data != "" {
 		logrus.Debug("returning cached file")
 		return s.data, nil
@@ -60,15 +60,15 @@ func (s *S3Repository) getData(ctx context.Context) (string, error) {
 	return s.data, nil
 }
 
-func (s *S3Repository) getType() string {
+func (s *S3Repository) GetType() string {
 	return "s3"
 }
 
-func (s *S3Repository) getPath() string {
+func (s *S3Repository) GetPath() string {
 	return s.bucket + "/" + s.key
 }
 
-func (s *S3Repository) getUrl() *url.URL {
+func (s *S3Repository) GetUrl() *url.URL {
 	return nil
 }
 

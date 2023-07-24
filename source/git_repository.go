@@ -1,4 +1,4 @@
-package main
+package source
 
 import (
 	"context"
@@ -25,11 +25,11 @@ type GitRepository struct {
 	fs                billy.Filesystem
 }
 
-func (g *GitRepository) getUrl() *url.URL {
+func (g *GitRepository) GetUrl() *url.URL {
 	return g.url
 }
 
-func (g *GitRepository) getData(ctx context.Context) (string, error) {
+func (g *GitRepository) GetData(ctx context.Context) (string, error) {
 	if ((time.Now().Unix() - g.lastUpdateSeconds) < 10) && g.data != "" {
 		logrus.Debug("returning cached file")
 		return g.data, nil
@@ -48,7 +48,6 @@ func (g *GitRepository) getData(ctx context.Context) (string, error) {
 		logrus.Debug("Cloned")
 		g.repo = r
 	} else {
-
 		// Pull the latest changes from the Git repository
 		w, err := g.repo.Worktree()
 		if err != nil {
@@ -79,11 +78,11 @@ func (g *GitRepository) getData(ctx context.Context) (string, error) {
 	return g.data, nil
 }
 
-func (g *GitRepository) getType() string {
+func (g *GitRepository) GetType() string {
 	return "git"
 }
 
-func (g *GitRepository) getPath() string {
+func (g *GitRepository) GetPath() string {
 	return g.path
 }
 

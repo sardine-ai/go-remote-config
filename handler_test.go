@@ -16,7 +16,7 @@ func TestReadRemoteConfig(t *testing.T) {
 
 	// Create a new repository with the test server URL
 	var err error
-	repository, err = NewWebRepository(testServer.URL)
+	repository, err = source.NewWebRepository(testServer.URL)
 	if err != nil {
 		t.Fatal(err)
 	}

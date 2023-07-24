@@ -1,7 +1,9 @@
 package main
 
 import (
+	"errors"
 	"flag"
+	"github.com/divakarmanoj/go-remote-config-server/source"
 	"github.com/go-http-utils/etag"
 	"github.com/sirupsen/logrus"
 	"net/http"
@@ -15,7 +17,7 @@ var path = flag.String("path", "", "path to the file")
 
 var URL = flag.String("url", "", "url to the file")
 
-var repository Repository
+var repository source.Repository
 
 func main() {
 	flag.Parse()
@@ -42,5 +44,34 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 		ReadRemoteConfig(w, r)
 	case "HEAD":
 		ReadRemoteConfig(w, r)
+	}
+}
+
+func NewRepository(repoType string) (source.Repository, error) {
+	switch repoType {
+	case "fs":
+		if *path == "" {
+			logrus.Error("path is required")
+			return nil, errors.New("path is required")
+		}
+		return source.NewFileRepository(*path)
+	case "git":
+		if *path == "" {
+			logrus.Error("path is required")
+			return nil, errors.New("path is required")
+		}
+		if *URL == "" {
+			logrus.Error("URL is required")
+			return nil, errors.New("URL is required")
+		}
+		return source.NewGitRepository(*URL, *path)
+	case "http":
+		if *URL == "" {
+			logrus.Error("URL is required")
+			return nil, errors.New("URL is required")
+		}
+		return source.NewWebRepository(*URL)
+	default:
+		return source.NewFileRepository(*path)
 	}
 }

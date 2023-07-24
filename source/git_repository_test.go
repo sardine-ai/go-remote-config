@@ -1,4 +1,4 @@
-package main
+package source
 
 import (
 	"context"
@@ -11,7 +11,7 @@ func TestGitRepository(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	data, err := repo.getData(context.Background())
+	data, err := repo.GetData(context.Background())
 	if err != nil {
 		t.Error(err)
 	}
@@ -19,7 +19,7 @@ func TestGitRepository(t *testing.T) {
 		t.Error("data is empty")
 	}
 
-	data, err = repo.getData(context.Background())
+	data, err = repo.GetData(context.Background())
 	if err != nil {
 		t.Error(err)
 	}
@@ -28,13 +28,13 @@ func TestGitRepository(t *testing.T) {
 	}
 
 	// test GetUrl()
-	url := repo.getUrl()
+	url := repo.GetUrl()
 	if url.String() != giturl {
 		t.Errorf("expected %q, got %q", giturl, url.String())
 	}
 
 	// test GetPath()
-	path := repo.getPath()
+	path := repo.GetPath()
 	if path != "test.yaml" {
 		t.Errorf("expected %q, got %q", "test.yaml", path)
 	}

@@ -1,4 +1,4 @@
-package main
+package source
 
 import (
 	"context"
@@ -16,7 +16,7 @@ type FileRepository struct {
 	url               *url.URL
 }
 
-func (f *FileRepository) getData(ctx context.Context) (string, error) {
+func (f *FileRepository) GetData(ctx context.Context) (string, error) {
 	if ((time.Now().Unix() - f.lastUpdateSeconds) < 10) && f.data != "" {
 		logrus.WithContext(ctx).Debug("returning cached file")
 		return f.data, nil
@@ -31,15 +31,15 @@ func (f *FileRepository) getData(ctx context.Context) (string, error) {
 	return string(data), nil
 }
 
-func (f *FileRepository) getType() string {
+func (f *FileRepository) GetType() string {
 	return "fs"
 }
 
-func (f *FileRepository) getPath() string {
+func (f *FileRepository) GetPath() string {
 	return f.path
 }
 
-func (f *FileRepository) getUrl() *url.URL {
+func (f *FileRepository) GetUrl() *url.URL {
 	return f.url
 }
 

@@ -20,4 +20,11 @@ for now only http is supported for git repositories and the url must be a public
 go run main.go --url enter_url_here --repo-type http
 ```
 the url must be a public url
+
+## Configuration
+ if you want authentication for the config server you can use the following flag
+```bash
+go run main.go --auth_key enter_auth_key_here
+```
+this enables api key authentication for the config server.
  

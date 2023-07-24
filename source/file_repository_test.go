@@ -1,4 +1,4 @@
-package main
+package source
 
 import (
 	"context"
@@ -42,7 +42,7 @@ hobbies:
 	if err != nil {
 		t.Fatal(err)
 	}
-	data, err := repo.getData(context.Background())
+	data, err := repo.GetData(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -51,7 +51,7 @@ hobbies:
 	}
 
 	// test GetUrl()
-	url := repo.getUrl()
+	url := repo.GetUrl()
 	expectedURL, err := filePathToURL(tmpfile.Name())
 	if err != nil {
 		t.Fatal(err)
@@ -62,14 +62,14 @@ hobbies:
 	}
 
 	// test GetPath()
-	path := repo.getPath()
+	path := repo.GetPath()
 	if path != tmpfile.Name() {
 		t.Errorf("expected %q, got %q", tmpfile.Name(), path)
 	}
 
 	// sad path
 	repo, err = NewFileRepository("/tmp/does-not-exist")
-	data, err = repo.getData(context.Background())
+	data, err = repo.GetData(context.Background())
 	if err == nil {
 		t.Fatal("expected error")
 	}

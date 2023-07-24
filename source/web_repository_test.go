@@ -1,4 +1,4 @@
-package main
+package source
 
 import (
 	"context"
@@ -19,13 +19,13 @@ func TestWebRepository(t *testing.T) {
 	repo, err := NewWebRepository(testServer.URL)
 
 	// Test the GetUrl() function
-	url := repo.getUrl()
+	url := repo.GetUrl()
 	if url.String() != testServer.URL {
 		t.Errorf("expected %q, got %q", testServer.URL, url.String())
 	}
 
 	// Test the GetData() function
-	data, err := repo.getData(context.Background())
+	data, err := repo.GetData(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
