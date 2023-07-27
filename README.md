@@ -1,4 +1,4 @@
-# go-remote-config-server
+# go-remote-config
 
 ## Description
 This is a simple remote config server written in Go. It is intended to be used as a remote config server for web and mobile applications.
