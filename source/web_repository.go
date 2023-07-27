@@ -2,69 +2,90 @@ package source
 
 import (
 	"context"
+	"github.com/divakarmanoj/go-remote-config-server/model"
 	"github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v3"
 	"io"
 	"net/http"
 	"net/url"
-	"time"
+	"sync"
 )
 
+// WebRepository is a struct that implements the Repository interface for
+// handling configuration data fetched from a remote HTTP endpoint (web URL).
 type WebRepository struct {
-	lastUpdateSeconds int64
-	data              string
-	url               *url.URL
+	sync.RWMutex                         // RWMutex to synchronize access to data during refresh
+	data         map[string]model.Config // Map to store the configuration data
+	url          *url.URL                // URL representing the remote HTTP endpoint (web URL)
 }
 
-func (w *WebRepository) GetData(ctx context.Context) (string, error) {
-	if ((time.Now().Unix() - w.lastUpdateSeconds) < 10) && w.data != "" {
-		logrus.Debug("returning cached file")
-		return w.data, nil
-	}
-	logrus.Debug("fetching file")
+// GetData returns the configuration data as a map of configuration names to their respective models.
+func (w *WebRepository) GetData() map[string]model.Config {
+	w.RLock()
+	defer w.RUnlock()
+	return w.data
+}
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, w.url.String(), nil)
+// Refresh fetches the YAML file from the remote HTTP endpoint (web URL),
+// unmarshal it into the data map.
+func (w *WebRepository) Refresh() error {
+	w.Lock()
+	defer w.Unlock()
+
+	// Create an HTTP request to fetch the YAML file from the remote web URL.
+	request, err := http.NewRequestWithContext(context.Background(), http.MethodGet, w.url.String(), nil)
 	if err != nil {
 		logrus.Debug("error creating request")
-		return "", err
+		return err
 	}
 
+	// Perform the HTTP request to get the YAML file content.
 	resp, err := http.DefaultClient.Do(request)
 	if err != nil {
 		logrus.Debug("error doing request")
-		return "", err
+		return err
 	}
 	defer resp.Body.Close()
 
-	logrus.Debug("reading file")
+	// Read the file content from the response body.
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		logrus.Debug("error reading file")
-		return "", err
+		return err
 	}
 
-	logrus.Debug("setting data")
-	w.data = string(data)
-	logrus.Debug("setting lastUpdateSeconds")
-	w.lastUpdateSeconds = time.Now().Unix()
-	return w.data, nil
+	// Unmarshal the YAML data into the data map.
+	err = yaml.Unmarshal(data, &w.data)
+	if err != nil {
+		logrus.Debug("error unmarshalling file")
+		return err
+	}
+
+	return nil
 }
 
+// GetType returns the type of the repository (in this case, "http").
 func (w *WebRepository) GetType() string {
 	return "http"
 }
 
+// GetPath returns the web URL representing the remote HTTP endpoint.
 func (w *WebRepository) GetPath() string {
 	return w.url.String()
 }
 
+// GetUrl returns the web URL representing the remote HTTP endpoint.
 func (w *WebRepository) GetUrl() *url.URL {
 	return w.url
 }
 
-func NewWebRepository(webUrl string) (Repository, error) {
-	parsedUrl, err := url.Parse(webUrl)
+// NewWebRepository creates a new WebRepository with the provided web URL.
+func NewWebRepository(webURL string) (Repository, error) {
+	// Parse the web URL into a URL representation.
+	parsedURL, err := url.Parse(webURL)
 	if err != nil {
 		return nil, err
 	}
-	return &WebRepository{url: parsedUrl}, nil
+	// Create and return a new WebRepository with the specified web URL.
+	return &WebRepository{url: parsedURL}, nil
 }

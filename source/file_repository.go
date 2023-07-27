@@ -1,62 +1,76 @@
 package source
 
 import (
-	"context"
+	"github.com/divakarmanoj/go-remote-config-server/model"
 	"github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v3"
 	"net/url"
 	"os"
 	"path/filepath"
-	"time"
+	"sync"
 )
 
+// FileRepository is a struct that implements the Repository interface for
+// handling configuration data stored in a YAML file.
 type FileRepository struct {
-	lastUpdateSeconds int64
-	data              string
-	path              string
-	url               *url.URL
+	sync.RWMutex                         // RWMutex to synchronize access to data during refresh
+	Path         string                  // File path of the YAML configuration file
+	Url          *url.URL                // URL representation of the file path
+	data         map[string]model.Config // Map to store the configuration data
 }
 
-func (f *FileRepository) GetData(ctx context.Context) (string, error) {
-	if ((time.Now().Unix() - f.lastUpdateSeconds) < 10) && f.data != "" {
-		logrus.WithContext(ctx).Debug("returning cached file")
-		return f.data, nil
-	}
-	data, err := os.ReadFile(f.path)
+// GetData returns a copy of the configuration data stored in the FileRepository.
+func (f *FileRepository) GetData() map[string]model.Config {
+	f.RLock()
+	defer f.RUnlock()
+	return f.data
+}
+
+// Refresh reads the YAML file, unmarshals it into the data map.
+func (f *FileRepository) Refresh() error {
+	f.Lock()
+	defer f.Unlock()
+
+	// Read the YAML file
+	data, err := os.ReadFile(f.Path)
 	if err != nil {
 		logrus.Debug("error reading file")
-		return "", err
+		return err
 	}
-	f.data = string(data)
-	f.lastUpdateSeconds = time.Now().Unix()
-	return string(data), nil
+
+	// Unmarshal the YAML data into the data map
+	err = yaml.Unmarshal(data, &f.data)
+	if err != nil {
+		logrus.Debug("error unmarshalling file")
+		return err
+	}
+
+	return nil
 }
 
-func (f *FileRepository) GetType() string {
-	return "fs"
-}
-
-func (f *FileRepository) GetPath() string {
-	return f.path
-}
-
-func (f *FileRepository) GetUrl() *url.URL {
-	return f.url
-}
-
+// NewFileRepository creates a new FileRepository with the provided file path.
+// It converts the file path to an absolute path and creates a URL representation
+// for the file.
 func NewFileRepository(path string) (Repository, error) {
+	// Convert the file path to a URL representation
 	toURL, err := filePathToURL(path)
 	if err != nil {
 		return nil, err
 	}
+
+	// Convert the file path to an absolute path
 	path, err = makeAbsoluteFilePath(path)
 	if err != nil {
 		return nil, err
 	}
-	return &FileRepository{path: path, url: toURL}, nil
+
+	// Create and return a new FileRepository with the absolute path and URL.
+	return &FileRepository{Path: path, Url: toURL}, nil
 }
 
+// filePathToURL converts a file path to a file URL representation.
 func filePathToURL(filePath string) (*url.URL, error) {
-	// Convert file path to absolute path, if it's not already absolute.
+	// Convert the file path to an absolute path, if it's not already absolute.
 	absPath, err := makeAbsoluteFilePath(filePath)
 	if err != nil {
 		return nil, err
@@ -71,6 +85,7 @@ func filePathToURL(filePath string) (*url.URL, error) {
 	return fileURL, nil
 }
 
+// makeAbsoluteFilePath converts the input file path to an absolute path.
 func makeAbsoluteFilePath(filePath string) (string, error) {
 	// Convert the input file path to an absolute path.
 	absPath, err := filepath.Abs(filePath)

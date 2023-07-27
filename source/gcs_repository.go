@@ -1,72 +1,76 @@
 package source
 
 import (
-	"context"
-	"io"
-	"net/url"
-	"time"
-
 	"cloud.google.com/go/storage"
+	"context"
+	"github.com/divakarmanoj/go-remote-config-server/model"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/api/option"
+	"gopkg.in/yaml.v3"
+	"io"
+	"sync"
 )
 
+// GCSRepository is a struct that implements the Repository interface for
+// handling configuration data stored in a YAML file on Google Cloud Storage (GCS).
 type GCSRepository struct {
-	lastUpdateSeconds int64
-	data              string
-	bucket            string
-	key               string
+	sync.RWMutex                         // RWMutex to synchronize access to data during refresh
+	data         map[string]model.Config // Map to store the configuration data
+	Bucket       string                  // GCS bucket name
+	Path         string                  // GCS file path
 }
 
-func (g *GCSRepository) GetData(ctx context.Context) (string, error) {
-	if ((time.Now().Unix() - g.lastUpdateSeconds) < 10) && g.data != "" {
-		logrus.Debug("returning cached file")
-		return g.data, nil
-	}
-	logrus.Debug("fetching file")
+// Refresh reads the YAML file from GCS, unmarshals it into the data map.
+func (g *GCSRepository) Refresh() error {
+	g.Lock()
+	defer g.Unlock()
 
-	client, err := storage.NewClient(ctx, option.WithoutAuthentication())
+	// Create a new Google Cloud Storage client.
+	client, err := storage.NewClient(context.Background(), option.WithoutAuthentication())
 	if err != nil {
 		logrus.Debug("error creating client")
-		return "", err
+		return err
 	}
 	defer client.Close()
 
-	bucket := client.Bucket(g.bucket)
-	obj := bucket.Object(g.key)
-	reader, err := obj.NewReader(ctx)
+	// Get the GCS bucket and object for the specified path.
+	bucket := client.Bucket(g.Bucket)
+	obj := bucket.Object(g.Path)
+
+	// Create a reader to read the file from GCS.
+	reader, err := obj.NewReader(context.Background())
 	if err != nil {
 		logrus.Debug("error creating reader")
-		return "", err
+		return err
 	}
 	defer reader.Close()
 
-	logrus.Debug("reading file")
+	// Read the file data from the reader.
 	data, err := io.ReadAll(reader)
 	if err != nil {
 		logrus.Debug("error reading file")
-		return "", err
+		return err
 	}
 
-	logrus.Debug("setting data")
-	g.data = string(data)
-	logrus.Debug("setting lastUpdateSeconds")
-	g.lastUpdateSeconds = time.Now().Unix()
-	return g.data, nil
-}
+	// Unmarshal the YAML data into the data map.
+	err = yaml.Unmarshal(data, &g.data)
+	if err != nil {
+		logrus.Debug("error unmarshalling file")
+		return err
+	}
 
-func (g *GCSRepository) GetType() string {
-	return "gcs"
-}
-
-func (g *GCSRepository) GetPath() string {
-	return g.bucket + "/" + g.key
-}
-
-func (g *GCSRepository) GetUrl() *url.URL {
 	return nil
 }
 
-func NewGCSRepository(bucket, key string) (Repository, error) {
-	return &GCSRepository{bucket: bucket, key: key}, nil
+// GetData returns a copy of the configuration data stored in the GCSRepository.
+func (g *GCSRepository) GetData() map[string]model.Config {
+	g.RLock()
+	defer g.RUnlock()
+	return g.data
+}
+
+// NewGCSRepository creates a new GCSRepository with the provided GCS bucket and file path.
+func NewGCSRepository(bucket, path string) (Repository, error) {
+	// Create and return a new GCSRepository with the specified GCS bucket and file path.
+	return &GCSRepository{Bucket: bucket, Path: path}, nil
 }

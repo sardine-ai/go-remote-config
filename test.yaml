@@ -1,14 +1,25 @@
-name: John Doe
-age: 30
-email: johndoe@example.com
-is_employee: true
+name:
+  Type: "string"
+  Data: "John"
+age:
+  Type: "number"
+  Data: 30
+email:
+  Type: "string"
+  Data: "j@.com"
+is_employee:
+  Type: "boolean"
+  Data: true
 address:
+  Type: "object"
   city: New York
   country: USA
   zip_code: "10001"
 hobbies:
-  - Reading
-  - Cooking
-  - Hiking
-  - Swimming
-  - Coding
+  Type: "array_of_strings"
+  Data:
+    - Reading
+    - Cooking
+    - Hiking
+    - Swimming
+    - Coding
