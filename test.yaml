@@ -1,25 +1,15 @@
-name:
-  Type: "string"
-  Data: "John"
-age:
-  Type: "number"
-  Data: 30
-email:
-  Type: "string"
-  Data: "j@.com"
-is_employee:
-  Type: "boolean"
-  Data: true
+name: John
+age: 30
+email: j@.com
+is_employee: true
 address:
-  Type: "object"
+  street: 123 Main St
   city: New York
   country: USA
   zip_code: "10001"
 hobbies:
-  Type: "array_of_strings"
-  Data:
-    - Reading
-    - Cooking
-    - Hiking
-    - Swimming
-    - Coding
+  - Reading
+  - Cooking
+  - Hiking
+  - Swimming
+  - Coding

@@ -3,16 +3,16 @@ package go_remote_config
 import (
 	"context"
 	"errors"
-	"github.com/divakarmanoj/go-remote-config-server/source"
+	"github.com/divakarmanoj/go-remote-config/source"
 	"github.com/sirupsen/logrus"
-	"reflect"
+	"gopkg.in/yaml.v3"
 	"time"
 )
 
 type Client struct {
 	Repository      source.Repository
 	RefreshInterval time.Duration
-	Cancel          context.CancelFunc
+	cancel          context.CancelFunc
 }
 
 // NewClient creates a new Client with the provided context, repository,
@@ -29,7 +29,14 @@ func NewClient(ctx context.Context, repository source.Repository, refreshInterva
 	client := &Client{
 		Repository:      repository,
 		RefreshInterval: refreshInterval,
-		Cancel:          cancel, // Store the cancel function in the Client struct for later use.
+		cancel:          cancel, // Store the cancel function in the Client struct for later use.
+	}
+
+	// Refresh the configuration data for the first time to ensure the
+	// Client is initialized with the latest data before it is used.
+	err := client.Repository.Refresh()
+	if err != nil {
+		logrus.WithError(err).Error("error refreshing repository")
 	}
 
 	// Start the background refresh goroutine by calling the refresh function
@@ -68,7 +75,7 @@ func (c *Client) Close() {
 	// Call the Cancel function associated with the Client's context.
 	// This cancels the context, causing the background refresh goroutine
 	// (started by NewClient) to return and terminate gracefully.
-	c.Cancel()
+	c.cancel()
 }
 
 // GetConfig retrieves the configuration with the given name from the repository
@@ -84,21 +91,16 @@ func (c *Client) GetConfig(name string, data interface{}) error {
 	if !ok {
 		return errors.New("config not found")
 	}
-
-	// Use reflection to work with the provided data pointer
-	reflectedValue := reflect.ValueOf(data)
-
-	// Ensure the data is a non-nil pointer
-	if reflectedValue.Kind() != reflect.Ptr || reflectedValue.IsNil() {
-		return errors.New("data should be a non-nil pointer")
+	//
+	marshal, err := yaml.Marshal(config)
+	if err != nil {
+		return err
+	}
+	// Unmarshal the configuration data into the provided data pointer
+	err = yaml.Unmarshal(marshal, data)
+	if err != nil {
+		return err
 	}
 
-	// Check if the type of the data is compatible with the type of the value in the map
-	if reflect.TypeOf(config) != reflect.TypeOf(reflectedValue.Elem().Interface()) {
-		return errors.New("data type mismatch")
-	}
-
-	// Set the value from the map to the provided pointer
-	reflectedValue.Elem().Set(reflect.ValueOf(config))
 	return nil
 }

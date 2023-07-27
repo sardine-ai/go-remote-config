@@ -3,7 +3,6 @@ package source
 import (
 	"cloud.google.com/go/storage"
 	"context"
-	"github.com/divakarmanoj/go-remote-config-server/model"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/api/option"
 	"gopkg.in/yaml.v3"
@@ -14,10 +13,10 @@ import (
 // GCSRepository is a struct that implements the Repository interface for
 // handling configuration data stored in a YAML file on Google Cloud Storage (GCS).
 type GCSRepository struct {
-	sync.RWMutex                         // RWMutex to synchronize access to data during refresh
-	data         map[string]model.Config // Map to store the configuration data
-	Bucket       string                  // GCS bucket name
-	Path         string                  // GCS file path
+	sync.RWMutex                        // RWMutex to synchronize access to data during refresh
+	data         map[string]interface{} // Map to store the configuration data
+	Bucket       string                 // GCS bucket name
+	Path         string                 // GCS file path
 }
 
 // Refresh reads the YAML file from GCS, unmarshals it into the data map.
@@ -63,7 +62,7 @@ func (g *GCSRepository) Refresh() error {
 }
 
 // GetData returns a copy of the configuration data stored in the GCSRepository.
-func (g *GCSRepository) GetData() map[string]model.Config {
+func (g *GCSRepository) GetData() map[string]interface{} {
 	g.RLock()
 	defer g.RUnlock()
 	return g.data

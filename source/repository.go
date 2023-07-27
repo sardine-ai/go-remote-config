@@ -1,13 +1,11 @@
 package source
 
-import "github.com/divakarmanoj/go-remote-config-server/model"
-
 // Repository is an interface that defines the contract for a configuration data repository.
 // Any type implementing this interface must provide methods to retrieve the configuration data
 // and to refresh the data when required.
 type Repository interface {
 	// GetData returns the configuration data as a map of configuration names to their respective models.
-	GetData() map[string]model.Config
+	GetData() map[string]interface{}
 
 	// Refresh updates the configuration data by fetching the latest data from the data source,
 	// such as a file, database, or remote service. The method should handle any necessary

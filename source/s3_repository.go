@@ -5,7 +5,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/divakarmanoj/go-remote-config-server/model"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 	"io"
@@ -16,11 +15,11 @@ import (
 // S3Repository is a struct that implements the Repository interface for
 // handling configuration data stored in a YAML file on Amazon S3.
 type S3Repository struct {
-	sync.RWMutex                         // RWMutex to synchronize access to data during refresh
-	data         map[string]model.Config // Map to store the configuration data
-	Bucket       string                  // S3 bucket name
-	Path         string                  // S3 object key (path to the YAML file within the bucket)
-	Region       string                  // AWS region where the S3 bucket is located
+	sync.RWMutex                        // RWMutex to synchronize access to data during refresh
+	data         map[string]interface{} // Map to store the configuration data
+	Bucket       string                 // S3 bucket name
+	Path         string                 // S3 object key (path to the YAML file within the bucket)
+	Region       string                 // AWS region where the S3 bucket is located
 }
 
 // Refresh reads the YAML file from Amazon S3, unmarshals it into the data map
@@ -68,7 +67,7 @@ func (s *S3Repository) Refresh() error {
 }
 
 // GetData returns a copy of the configuration data stored in the S3Repository.
-func (s *S3Repository) GetData() map[string]model.Config {
+func (s *S3Repository) GetData() map[string]interface{} {
 	s.RLock()
 	defer s.RUnlock()
 	return s.data

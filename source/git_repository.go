@@ -3,7 +3,6 @@ package source
 import (
 	"context"
 	"fmt"
-	"github.com/divakarmanoj/go-remote-config-server/model"
 	"github.com/go-git/go-billy/v5"
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-git/v5"
@@ -19,12 +18,12 @@ import (
 // GitRepository is a struct that implements the Repository interface for
 // handling configuration data stored in a YAML file within a Git repository.
 type GitRepository struct {
-	sync.RWMutex                          // RWMutex to synchronize access to data during refresh
-	data          map[string]model.Config // Map to store the configuration data
-	URL           *url.URL                // URL representing the Git repository URL
-	Path          string                  // Path to the YAML file within the Git repository
-	GitRepository *git.Repository         // Go-Git repository instance for the in-memory clone
-	fs            billy.Filesystem        // Filesystem to store the in-memory clone of the repository
+	sync.RWMutex                         // RWMutex to synchronize access to data during refresh
+	data          map[string]interface{} // Map to store the configuration data
+	URL           *url.URL               // URL representing the Git repository URL
+	Path          string                 // Path to the YAML file within the Git repository
+	GitRepository *git.Repository        // Go-Git repository instance for the in-memory clone
+	fs            billy.Filesystem       // Filesystem to store the in-memory clone of the repository
 }
 
 // Refresh reads the YAML file from the Git repository, unmarshals it into the data map.
@@ -89,7 +88,7 @@ func (g *GitRepository) Refresh() error {
 }
 
 // GetData returns a copy of the configuration data stored in the GitRepository.
-func (g *GitRepository) GetData() map[string]model.Config {
+func (g *GitRepository) GetData() map[string]interface{} {
 	g.RLock()
 	defer g.RUnlock()
 	return g.data

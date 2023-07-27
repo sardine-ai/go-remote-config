@@ -1,10 +1,8 @@
 package source
 
 import (
-	"github.com/divakarmanoj/go-remote-config-server/model"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
-	"net/url"
 	"os"
 	"path/filepath"
 	"sync"
@@ -13,14 +11,13 @@ import (
 // FileRepository is a struct that implements the Repository interface for
 // handling configuration data stored in a YAML file.
 type FileRepository struct {
-	sync.RWMutex                         // RWMutex to synchronize access to data during refresh
-	Path         string                  // File path of the YAML configuration file
-	Url          *url.URL                // URL representation of the file path
-	data         map[string]model.Config // Map to store the configuration data
+	sync.RWMutex                        // RWMutex to synchronize access to data during refresh
+	Path         string                 // File path of the YAML configuration file
+	data         map[string]interface{} // Map to store the configuration data
 }
 
 // GetData returns a copy of the configuration data stored in the FileRepository.
-func (f *FileRepository) GetData() map[string]model.Config {
+func (f *FileRepository) GetData() map[string]interface{} {
 	f.RLock()
 	defer f.RUnlock()
 	return f.data
@@ -52,37 +49,14 @@ func (f *FileRepository) Refresh() error {
 // It converts the file path to an absolute path and creates a URL representation
 // for the file.
 func NewFileRepository(path string) (Repository, error) {
-	// Convert the file path to a URL representation
-	toURL, err := filePathToURL(path)
-	if err != nil {
-		return nil, err
-	}
-
 	// Convert the file path to an absolute path
-	path, err = makeAbsoluteFilePath(path)
+	path, err := makeAbsoluteFilePath(path)
 	if err != nil {
 		return nil, err
 	}
 
 	// Create and return a new FileRepository with the absolute path and URL.
-	return &FileRepository{Path: path, Url: toURL}, nil
-}
-
-// filePathToURL converts a file path to a file URL representation.
-func filePathToURL(filePath string) (*url.URL, error) {
-	// Convert the file path to an absolute path, if it's not already absolute.
-	absPath, err := makeAbsoluteFilePath(filePath)
-	if err != nil {
-		return nil, err
-	}
-
-	// Create a URL from the absolute path.
-	fileURL := &url.URL{
-		Scheme: "file",
-		Path:   absPath,
-	}
-
-	return fileURL, nil
+	return &FileRepository{Path: path}, nil
 }
 
 // makeAbsoluteFilePath converts the input file path to an absolute path.

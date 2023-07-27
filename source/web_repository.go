@@ -2,7 +2,6 @@ package source
 
 import (
 	"context"
-	"github.com/divakarmanoj/go-remote-config-server/model"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 	"io"
@@ -14,13 +13,13 @@ import (
 // WebRepository is a struct that implements the Repository interface for
 // handling configuration data fetched from a remote HTTP endpoint (web URL).
 type WebRepository struct {
-	sync.RWMutex                         // RWMutex to synchronize access to data during refresh
-	data         map[string]model.Config // Map to store the configuration data
-	url          *url.URL                // URL representing the remote HTTP endpoint (web URL)
+	sync.RWMutex                        // RWMutex to synchronize access to data during refresh
+	data         map[string]interface{} // Map to store the configuration data
+	Url          *url.URL               // URL representing the remote HTTP endpoint (web URL)
 }
 
 // GetData returns the configuration data as a map of configuration names to their respective models.
-func (w *WebRepository) GetData() map[string]model.Config {
+func (w *WebRepository) GetData() map[string]interface{} {
 	w.RLock()
 	defer w.RUnlock()
 	return w.data
@@ -33,7 +32,7 @@ func (w *WebRepository) Refresh() error {
 	defer w.Unlock()
 
 	// Create an HTTP request to fetch the YAML file from the remote web URL.
-	request, err := http.NewRequestWithContext(context.Background(), http.MethodGet, w.url.String(), nil)
+	request, err := http.NewRequestWithContext(context.Background(), http.MethodGet, w.Url.String(), nil)
 	if err != nil {
 		logrus.Debug("error creating request")
 		return err
@@ -64,21 +63,6 @@ func (w *WebRepository) Refresh() error {
 	return nil
 }
 
-// GetType returns the type of the repository (in this case, "http").
-func (w *WebRepository) GetType() string {
-	return "http"
-}
-
-// GetPath returns the web URL representing the remote HTTP endpoint.
-func (w *WebRepository) GetPath() string {
-	return w.url.String()
-}
-
-// GetUrl returns the web URL representing the remote HTTP endpoint.
-func (w *WebRepository) GetUrl() *url.URL {
-	return w.url
-}
-
 // NewWebRepository creates a new WebRepository with the provided web URL.
 func NewWebRepository(webURL string) (Repository, error) {
 	// Parse the web URL into a URL representation.
@@ -87,5 +71,5 @@ func NewWebRepository(webURL string) (Repository, error) {
 		return nil, err
 	}
 	// Create and return a new WebRepository with the specified web URL.
-	return &WebRepository{url: parsedURL}, nil
+	return &WebRepository{Url: parsedURL}, nil
 }
