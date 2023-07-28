@@ -61,7 +61,6 @@ func (g *GcpStorageRepository) Refresh() error {
 
 	// Store the raw data of the YAML file.
 	g.rawData = fileContent
-
 	return nil
 }
 
