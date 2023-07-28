@@ -1,20 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AnalysisUIOptions">
+    <option name="ANALYZE_INJECTED_CODE" value="false" />
+  </component>
   <component name="AutoImportSettings">
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="311d5dea-585b-4731-8306-a2ec96d4bb68" name="Changes" comment="Server">
-      <change afterPath="$PROJECT_DIR$/server/server.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/server_test.go" afterDir="false" />
+    <list default="true" id="311d5dea-585b-4731-8306-a2ec96d4bb68" name="Changes" comment="Fix errors.">
+      <change afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client.go" beforeDir="false" afterPath="$PROJECT_DIR$/client/client.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/client/client_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/file_repository.go" beforeDir="false" afterPath="$PROJECT_DIR$/source/file_repository.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/git_repository.go" beforeDir="false" afterPath="$PROJECT_DIR$/source/git_repository.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/repository.go" beforeDir="false" afterPath="$PROJECT_DIR$/source/repository.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/web_repository.go" beforeDir="false" afterPath="$PROJECT_DIR$/source/web_repository.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/test.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -31,6 +26,12 @@
   <component name="GOROOT" url="file://$USER_HOME$/go/go1.20.5" />
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="ProjectErrors" />
   </component>
   <component name="ProjectId" id="2TAwbvHjDGClieFrVZpKkgYkimo" />
   <component name="ProjectViewState">
@@ -50,7 +51,10 @@
     "go.sdk.automatically.set": "true",
     "last_opened_file_path": "/Users/divakarmanoj/dev/go/src/go-remote-config",
     "node.js.detected.package.eslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)"
+    "node.js.selected.package.eslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "run.code.analysis.last.selected.profile": "pProject Default",
+    "settings.editor.selected.configurable": "preferences.fileTypes"
   }
 }]]></component>
   <component name="RecentsManager">
@@ -135,7 +139,8 @@
     <MESSAGE value="Added test and changes config" />
     <MESSAGE value="Added Test and fixed race condition" />
     <MESSAGE value="Server" />
-    <option name="LAST_COMMIT_MESSAGE" value="Server" />
+    <MESSAGE value="Fix errors." />
+    <option name="LAST_COMMIT_MESSAGE" value="Fix errors." />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>
