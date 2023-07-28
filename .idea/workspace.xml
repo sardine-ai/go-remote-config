@@ -4,8 +4,10 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75e9e61d-9a6a-4b42-8939-562105ce586b" name="Changes" comment="ignore server for codecov">
-      <change beforePath="$PROJECT_DIR$/client/client_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/client/client_test.go" afterDir="false" />
+    <list default="true" id="75e9e61d-9a6a-4b42-8939-562105ce586b" name="Changes" comment="increasing Test Coverage.">
+      <change beforePath="$PROJECT_DIR$/.github/workflows/go.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/go.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/coverage.txt" beforeDir="false" afterPath="$PROJECT_DIR$/coverage.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,7 +56,7 @@
     &quot;settings.editor.selected.configurable&quot;: &quot;goland.project.structure&quot;
   }
 }</component>
-  <component name="RunManager" selected="Go Test.go test github.com/divakarmanoj/go-remote-config/client">
+  <component name="RunManager" selected="Go Test.TestNewClient in github.com/divakarmanoj/go-remote-config/client">
     <configuration name="TestNewClient in github.com/divakarmanoj/go-remote-config/client" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="go-remote-config" />
       <working_directory value="$PROJECT_DIR$/client" />
@@ -134,8 +136,8 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Go Test.go test github.com/divakarmanoj/go-remote-config/client" />
         <item itemvalue="Go Test.TestNewClient in github.com/divakarmanoj/go-remote-config/client" />
+        <item itemvalue="Go Test.go test github.com/divakarmanoj/go-remote-config/client" />
         <item itemvalue="Go Test.TestRefresh in github.com/divakarmanoj/go-remote-config/client" />
         <item itemvalue="Go Test.TestNewClient/FileRepository in github.com/divakarmanoj/go-remote-config/client" />
         <item itemvalue="Go Test.TestNewClient/GcpStorageRepository in github.com/divakarmanoj/go-remote-config/client" />
@@ -170,7 +172,8 @@
     <MESSAGE value="Testing bool" />
     <MESSAGE value="ignore server for testing" />
     <MESSAGE value="ignore server for codecov" />
-    <option name="LAST_COMMIT_MESSAGE" value="ignore server for codecov" />
+    <MESSAGE value="increasing Test Coverage." />
+    <option name="LAST_COMMIT_MESSAGE" value="increasing Test Coverage." />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>
@@ -198,6 +201,7 @@
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/go_remote_config$go_test_github_com_divakarmanoj_go_remote_config_client.out" NAME="go test github.com/divakarmanoj/go-remote-config/client Coverage Results" MODIFIED="1690575368501" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="GoCoverage" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
+    <SUITE FILE_PATH="coverage/go_remote_config$TestNewClient_in_github_com_divakarmanoj_go_remote_config_client.out" NAME="TestNewClient in github.com/divakarmanoj/go-remote-config/client Coverage Results" MODIFIED="1690576133040" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="GoCoverage" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
     <SUITE FILE_PATH="coverage/go_remote_config$TestNewClient_FileRepository_in_github_com_divakarmanoj_go_remote_config_client.out" NAME="TestNewClient/FileRepository in github.com/divakarmanoj/go-remote-config/client Coverage Results" MODIFIED="1690571383689" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="GoCoverage" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
     <SUITE FILE_PATH="coverage/go_remote_config$TestRefresh_in_github_com_divakarmanoj_go_remote_config_client.out" NAME="TestRefresh in github.com/divakarmanoj/go-remote-config/client Coverage Results" MODIFIED="1690574835632" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="GoCoverage" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
   </component>
