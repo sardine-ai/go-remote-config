@@ -4,8 +4,8 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75e9e61d-9a6a-4b42-8939-562105ce586b" name="Changes" comment="ignore server for testing">
-      <change afterPath="$PROJECT_DIR$/codecov.yml" afterDir="false" />
+    <list default="true" id="75e9e61d-9a6a-4b42-8939-562105ce586b" name="Changes" comment="ignore server for codecov">
+      <change beforePath="$PROJECT_DIR$/client/client_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/client/client_test.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -169,7 +169,8 @@
     <MESSAGE value="Added codcov" />
     <MESSAGE value="Testing bool" />
     <MESSAGE value="ignore server for testing" />
-    <option name="LAST_COMMIT_MESSAGE" value="ignore server for testing" />
+    <MESSAGE value="ignore server for codecov" />
+    <option name="LAST_COMMIT_MESSAGE" value="ignore server for codecov" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>
@@ -189,7 +190,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/client/client_test.go</url>
-          <line>212</line>
+          <line>226</line>
           <option name="timeStamp" value="12" />
         </line-breakpoint>
       </breakpoints>

@@ -103,6 +103,13 @@ func TestNewClient(t *testing.T) {
 			if name != "John" {
 				t.Errorf("Expected name to be John, got %s", name)
 			}
+			name, err = client.GetConfigString("name")
+			if err != nil {
+				t.Errorf("Error getting name: %s", err.Error())
+			}
+			if name != "John" {
+				t.Errorf("Expected name to be John, got %s", name)
+			}
 			type Address struct {
 				Street  string `yaml:"street"`
 				City    string `yaml:"city"`
@@ -136,6 +143,13 @@ func TestNewClient(t *testing.T) {
 			}
 			var hobbies []string
 			err = client.GetConfig("hobbies", &hobbies)
+			if err != nil {
+				t.Errorf("Error getting hobbies: %s", err.Error())
+			}
+			if !reflect.DeepEqual(hobbies, []string{"Reading", "Cooking", "Hiking", "Swimming", "Coding"}) {
+				t.Errorf("Expected hobbies to contain Reading, Cooking, Hiking, Swimming, Coding, got %v", hobbies)
+			}
+			hobbies, err = client.GetConfigArrayOfStrings("hobbies")
 			if err != nil {
 				t.Errorf("Error getting hobbies: %s", err.Error())
 			}
