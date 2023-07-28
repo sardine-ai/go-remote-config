@@ -1,4 +1,5 @@
-## go-remote-config
+# go-remote-config
+
 
 this is a simple remote config for golang. It supports yaml and json files. It also supports local Files, github repositories and web urls.
 
@@ -93,4 +94,3 @@ func main() {
 	println(name)
 }
 ```
-
