@@ -1,6 +1,6 @@
 # go-remote-config
 ![go build and test](https://github.com/divakarmanoj/go-remote-config/actions/workflows/go.yml/badge.svg)
-[![Go Coverage](https://github.com/divakarmanoj/go-remote-config/wiki/coverage.svg)](https://raw.githack.com/wiki/divakarmanoj/go-remote-config/coverage.html)
+[![codecov](https://codecov.io/gh/divakarmanoj/go-remote-config/branch/main/graph/badge.svg?token=6BNZ5FPY9N)](https://codecov.io/gh/divakarmanoj/go-remote-config)
 
 
 this is a simple remote config for golang. It supports yaml and json files. It also supports local Files, github repositories and web urls.
