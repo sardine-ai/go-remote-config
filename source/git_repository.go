@@ -20,6 +20,8 @@ import (
 
 // GitRepository is a struct that implements the Repository interface for
 // handling configuration data stored in a YAML file within a Git repository.
+// Deprecated: This is Deprecated because it there is API limitation you make to github and gitlab. Which will get exhausted.
+// This is not a good way to handle the configuration is to use your CI to upload the configuration to a S3/GCS bucket and then use the S3/GCS  repository to fetch the configuration.
 type GitRepository struct {
 	sync.RWMutex                         // RWMutex to synchronize access to data during refresh
 	Name          string                 // Name of the configuration source
@@ -154,6 +156,8 @@ func (g *GitRepository) Refresh() error {
 }
 
 // GetData returns the configuration data as a map of configuration names to their respective models.
+// Deprecated: This is Deprecated because it there is API limitation you make to github and gitlab. Which will get exhausted.
+// This is not a good way to handle the configuration is to use your CI to upload the configuration to a S3/GCS bucket and then use the S3/GCS  repository to fetch the configuration.
 func (g *GitRepository) GetData(configName string) (config interface{}, isPresent bool) {
 	g.RLock()
 	defer g.RUnlock()

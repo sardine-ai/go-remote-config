@@ -1,9 +1,13 @@
 package client
 
 import (
+	"cloud.google.com/go/storage"
 	"context"
 	"github.com/divakarmanoj/go-remote-config/source"
+	"github.com/fullstorydev/emulators/storage/gcsemu"
+	"log"
 	"net/url"
+	"os"
 	"reflect"
 	"testing"
 	"time"
@@ -18,6 +22,48 @@ func TestNewClient(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error parsing url: %s", err.Error())
 	}
+
+	// start an in-memory Storage test server (for unit tests)
+	svr, err := gcsemu.NewServer("127.0.0.1:9023", gcsemu.Options{})
+	if err != nil {
+		t.Errorf("Error starting in-memory storage server: %s", err.Error())
+	}
+	defer svr.Close()
+	err = os.Setenv("STORAGE_EMULATOR_HOST", "http://127.0.0.1:9023")
+	if err != nil {
+		t.Errorf("Error setting env variable: %s", err.Error())
+	}
+	ctx := context.Background()
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		t.Errorf("Error creating storage client: %s", err.Error())
+	}
+
+	bucket := client.Bucket("test-bucket")
+
+	if err := bucket.Create(ctx, "test-project", nil); err != nil {
+		log.Fatalf("Failed to create bucket: %v", err)
+	}
+
+	object := bucket.Object("test.yaml")
+
+	w := object.NewWriter(ctx)
+
+	// Open the local file to be uploaded.
+	data, err := os.ReadFile("../test.yaml")
+	if err != nil {
+		log.Fatalf("Failed to open the local file: %v", err)
+	}
+
+	if _, err := w.Write(data); err != nil {
+		log.Fatalf("Failed to upload file: %v", err)
+	}
+
+	// Close the GCS writer, flushing any remaining data to GCS.
+	if err := w.Close(); err != nil {
+		log.Fatalf("Failed to close the GCS writer: %v", err)
+	}
+
 	testCases := []struct {
 		name            string
 		repository      source.Repository
@@ -36,6 +82,11 @@ func TestNewClient(t *testing.T) {
 		{
 			name:            "gitRepository",
 			repository:      &source.GitRepository{URL: gitUrlParsed, Path: "test.yaml", Branch: "go-only"},
+			refreshInterval: 10 * time.Second,
+		},
+		{
+			name:            "GcpStorageRepository",
+			repository:      &source.GcpStorageRepository{BucketName: "test-bucket", ObjectName: "test.yaml", Client: client},
 			refreshInterval: 10 * time.Second,
 		},
 	}
