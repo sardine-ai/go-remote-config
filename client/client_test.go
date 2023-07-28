@@ -3,6 +3,7 @@ package client
 import (
 	"cloud.google.com/go/storage"
 	"context"
+	"errors"
 	"github.com/divakarmanoj/go-remote-config/source"
 	"github.com/fullstorydev/emulators/storage/gcsemu"
 	"log"
@@ -72,7 +73,7 @@ func TestNewClient(t *testing.T) {
 		{
 			name:            "FileRepository",
 			repository:      &source.FileRepository{Path: "../test.yaml"},
-			refreshInterval: 10 * time.Second,
+			refreshInterval: 2 * time.Millisecond,
 		},
 		{
 			name:            "WebRepository",
@@ -93,9 +94,9 @@ func TestNewClient(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx := context.Background()
-			client := NewClient(ctx, tc.repository, tc.refreshInterval)
+			client, err := NewClient(ctx, tc.repository, tc.refreshInterval)
 			var name string
-			err := client.GetConfig("name", &name)
+			err = client.GetConfig("name", &name)
 			if err != nil {
 				t.Errorf("Error getting name: %s", err.Error())
 			}
@@ -151,7 +152,61 @@ func TestNewClient(t *testing.T) {
 			if floatAge != 303984756986439880155862132370440192 {
 				t.Errorf("Expected age to be 30, got %f", floatAge)
 			}
+			client.Close()
 		})
+	}
+}
+
+type test struct {
+	ShouldError    bool
+	GetRefeshCount int
+}
+
+func (t *test) GetData(_ string) (config interface{}, isPresent bool) {
+	return t.GetRefeshCount, true
+}
+
+func (t *test) GetRawData() []byte {
+	return []byte("test")
+}
+
+func (t *test) Refresh() error {
+	t.GetRefeshCount = t.GetRefeshCount + 1
+	if t.ShouldError {
+		return errors.New("error")
+	}
+	return nil
+}
+
+func (t *test) GetName() string {
+	return "test"
+}
+
+func TestRefresh(t *testing.T) {
+	// should throw Err
+	_, err := NewClient(context.Background(), &test{ShouldError: true}, 1*time.Second)
+	if err == nil {
+		t.Errorf("Expected error, got nil")
+	}
+	// should not throw Err
+	client := &Client{Repository: &test{ShouldError: false}, RefreshInterval: 1 * time.Second}
+	if err == nil {
+		t.Errorf("Expected error, got nil")
+	}
+	var count int
+	if client.GetConfig("test", &count) != nil {
+		t.Errorf("Expected error, got nil")
+	}
+	if count != 0 {
+		t.Errorf("Expected count to be 0, got %d", count)
+	}
+	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
+	refresh(ctx, client)
+	if client.GetConfig("test", &count) != nil {
+		t.Errorf("Expected error, got nil")
+	}
+	if count != 1 {
+		t.Errorf("Expected count to be 1, got %d", count)
 	}
 }
 

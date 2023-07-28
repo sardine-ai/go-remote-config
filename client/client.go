@@ -19,7 +19,7 @@ type Client struct {
 // and refresh interval. It starts a background goroutine to periodically
 // refresh the configuration data from the repository based on the given
 // refresh interval. The function returns the created Client.
-func NewClient(ctx context.Context, repository source.Repository, refreshInterval time.Duration) *Client {
+func NewClient(ctx context.Context, repository source.Repository, refreshInterval time.Duration) (*Client, error) {
 	// Create a new context and its corresponding cancel function
 	// for the Client. This allows us to control the lifetime of the
 	// background refresh goroutine.
@@ -37,6 +37,7 @@ func NewClient(ctx context.Context, repository source.Repository, refreshInterva
 	err := client.Repository.Refresh()
 	if err != nil {
 		logrus.WithError(err).Error("error refreshing repository")
+		return nil, err
 	}
 
 	// Start the background refresh goroutine by calling the refresh function
@@ -44,7 +45,7 @@ func NewClient(ctx context.Context, repository source.Repository, refreshInterva
 	go refresh(ctx, client)
 
 	// Return the created Client instance, which is now ready to use.
-	return client
+	return client, nil
 }
 
 // refresh is a goroutine that periodically refreshes the configuration data
