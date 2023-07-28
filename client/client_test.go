@@ -126,6 +126,14 @@ func TestNewClient(t *testing.T) {
 			if address.Zip != "10001" {
 				t.Errorf("Expected zip to be 10001, got %s", address.Zip)
 			}
+			var isEmployee bool
+			err = client.GetConfig("is_employee", &isEmployee)
+			if err != nil {
+				t.Errorf("Error getting is_employee: %s", err.Error())
+			}
+			if isEmployee != true {
+				t.Errorf("Expected is_employee to be true, got %t", isEmployee)
+			}
 			var hobbies []string
 			err = client.GetConfig("hobbies", &hobbies)
 			if err != nil {
