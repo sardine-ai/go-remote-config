@@ -4,10 +4,9 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75e9e61d-9a6a-4b42-8939-562105ce586b" name="Changes" comment="increasing Test Coverage.">
-      <change beforePath="$PROJECT_DIR$/.github/workflows/go.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/go.yml" afterDir="false" />
+    <list default="true" id="75e9e61d-9a6a-4b42-8939-562105ce586b" name="Changes" comment="Change coverage logic">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/coverage.txt" beforeDir="false" afterPath="$PROJECT_DIR$/coverage.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/client.go" beforeDir="false" afterPath="$PROJECT_DIR$/client/client.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -137,9 +136,9 @@
     <recent_temporary>
       <list>
         <item itemvalue="Go Test.TestNewClient in github.com/divakarmanoj/go-remote-config/client" />
+        <item itemvalue="Go Test.TestNewClient/FileRepository in github.com/divakarmanoj/go-remote-config/client" />
         <item itemvalue="Go Test.go test github.com/divakarmanoj/go-remote-config/client" />
         <item itemvalue="Go Test.TestRefresh in github.com/divakarmanoj/go-remote-config/client" />
-        <item itemvalue="Go Test.TestNewClient/FileRepository in github.com/divakarmanoj/go-remote-config/client" />
         <item itemvalue="Go Test.TestNewClient/GcpStorageRepository in github.com/divakarmanoj/go-remote-config/client" />
       </list>
     </recent_temporary>
@@ -173,7 +172,8 @@
     <MESSAGE value="ignore server for testing" />
     <MESSAGE value="ignore server for codecov" />
     <MESSAGE value="increasing Test Coverage." />
-    <option name="LAST_COMMIT_MESSAGE" value="increasing Test Coverage." />
+    <MESSAGE value="Change coverage logic" />
+    <option name="LAST_COMMIT_MESSAGE" value="Change coverage logic" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>
@@ -195,6 +195,11 @@
           <url>file://$PROJECT_DIR$/client/client_test.go</url>
           <line>226</line>
           <option name="timeStamp" value="12" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/client/client.go</url>
+          <line>108</line>
+          <option name="timeStamp" value="15" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

@@ -111,12 +111,20 @@ func (c *Client) GetConfigArrayOfStrings(name string) ([]string, error) {
 		return nil, errors.New("config not found")
 	}
 
-	configArray, ok := config.([]string)
+	configArray, ok := config.([]interface{})
 	if !ok {
 		return nil, errors.New("config is not an array of strings")
 	}
+	output := []string{}
+	for _, v := range configArray {
+		str, ok := v.(string)
+		if !ok {
+			return nil, errors.New("config is not an array of strings")
+		}
+		output = append(output, str)
+	}
 
-	return configArray, nil
+	return output, nil
 }
 
 // GetConfigString retrieves the configuration with the given name from the repository
