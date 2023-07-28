@@ -33,3 +33,6 @@ jobs:
         report: 'true'
         chart: 'true'
         amend: 'false'
+      if: |
+        matrix.os == 'ubuntu-latest' &&
+        github.event_name == 'push'
