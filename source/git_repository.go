@@ -6,6 +6,9 @@ import (
 	"github.com/go-git/go-billy/v5"
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/config"
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/go-git/go-git/v5/storage/memory"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
@@ -22,7 +25,9 @@ type GitRepository struct {
 	data          map[string]interface{} // Map to store the configuration data
 	URL           *url.URL               // URL representing the Git repository URL
 	Path          string                 // Path to the YAML file within the Git repository
-	GitRepository *git.Repository        // Go-Git repository instance for the in-memory clone
+	gitRepository *git.Repository        // Go-Git repository instance for the in-memory clone
+	Branch        string                 // Branch to use when cloning the Git repository
+	Auth          *http.BasicAuth        // BasicAuth to use when cloning the Git repository
 	fs            billy.Filesystem       // Filesystem to store the in-memory clone of the repository
 }
 
@@ -37,21 +42,74 @@ func (g *GitRepository) Refresh() error {
 		logrus.Debugf("Cloning %s into memory", g.URL.String())
 		// Clone the Git repository into the in-memory filesystem.
 		r, err := git.CloneContext(context.Background(), memory.NewStorage(), g.fs, &git.CloneOptions{
-			URL: g.URL.String(),
+			URL:  g.URL.String(),
+			Auth: g.Auth,
 		})
 		if err != nil {
 			return err
 		}
+
+		if g.Branch != "" {
+			// Checkout the specified Branch.
+			w, err := r.Worktree()
+			if err != nil {
+				return err
+			}
+
+			err = r.Fetch(&git.FetchOptions{
+				RefSpecs: []config.RefSpec{"refs/*:refs/*", "HEAD:refs/heads/HEAD"},
+			})
+			if err != nil {
+				return err
+			}
+
+			err = w.Checkout(&git.CheckoutOptions{
+				Branch: plumbing.NewBranchReferenceName(g.Branch),
+				Force:  true,
+			})
+			if err != nil {
+				return err
+			}
+		}
+
 		logrus.Debug("Cloned")
-		g.GitRepository = r
+		g.gitRepository = r
 	} else {
 		// Pull the latest changes from the Git repository.
-		w, err := g.GitRepository.Worktree()
+		w, err := g.gitRepository.Worktree()
 		if err != nil {
 			return err
 		}
 		logrus.Debug("Pulling")
-		err = w.PullContext(context.Background(), &git.PullOptions{})
+		// Get the HEAD reference, which points to the current branch
+		ref, err := g.gitRepository.Head()
+		if err != nil {
+			fmt.Printf("Error getting HEAD reference: %v\n", err)
+			os.Exit(1)
+		}
+
+		// Get the name of the current branch from the reference
+		branchName := ref.Name().Short()
+
+		fmt.Printf("Current branch: %s\n", branchName)
+		fmt.Printf("Current branch: %s\n", branchName)
+		fmt.Printf("Current branch: %s\n", branchName)
+		fmt.Printf("Current branch: %s\n", branchName)
+		fmt.Printf("Current branch: %s\n", branchName)
+		pullOptions := &git.PullOptions{
+			Auth: g.Auth,
+		}
+		if g.Branch != "" {
+			pullOptions = &git.PullOptions{
+				ReferenceName: plumbing.NewBranchReferenceName(g.Branch),
+				Force:         true,
+				SingleBranch:  true,
+				Auth:          g.Auth,
+			}
+		}
+
+		err = w.PullContext(context.Background(), pullOptions)
+
 		if err != nil && err != git.NoErrAlreadyUpToDate {
 			return err
 		}
@@ -87,11 +145,12 @@ func (g *GitRepository) Refresh() error {
 	return nil
 }
 
-// GetData returns a copy of the configuration data stored in the GitRepository.
-func (g *GitRepository) GetData() map[string]interface{} {
+// GetData returns the configuration data as a map of configuration names to their respective models.
+func (g *GitRepository) GetData(configName string) (config interface{}, isPresent bool) {
 	g.RLock()
 	defer g.RUnlock()
-	return g.data
+	config, isPresent = g.data[configName]
+	return config, isPresent
 }
 
 // NewGitRepository creates a new GitRepository with the provided Git URL and file path.
@@ -101,6 +160,6 @@ func NewGitRepository(gitURL string, path string) (Repository, error) {
 	if err != nil {
 		return nil, err
 	}
-	// Create and return a new GitRepository with the Git URL and file path.
+	// Create and return a new gitRepository with the Git URL and file path.
 	return &GitRepository{URL: parsedURL, Path: path}, nil
 }

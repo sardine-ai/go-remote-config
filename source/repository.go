@@ -5,7 +5,7 @@ package source
 // and to refresh the data when required.
 type Repository interface {
 	// GetData returns the configuration data as a map of configuration names to their respective models.
-	GetData() map[string]interface{}
+	GetData(string) (interface{}, bool)
 
 	// Refresh updates the configuration data by fetching the latest data from the data source,
 	// such as a file, database, or remote service. The method should handle any necessary

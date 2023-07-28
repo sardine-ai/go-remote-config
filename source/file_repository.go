@@ -16,11 +16,12 @@ type FileRepository struct {
 	data         map[string]interface{} // Map to store the configuration data
 }
 
-// GetData returns a copy of the configuration data stored in the FileRepository.
-func (f *FileRepository) GetData() map[string]interface{} {
-	f.RLock()
-	defer f.RUnlock()
-	return f.data
+// GetData returns the configuration data as a map of configuration names to their respective models.
+func (w *FileRepository) GetData(configName string) (config interface{}, isPresent bool) {
+	w.RLock()
+	defer w.RUnlock()
+	config, isPresent = w.data[configName]
+	return config, isPresent
 }
 
 // Refresh reads the YAML file, unmarshals it into the data map.

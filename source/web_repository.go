@@ -15,14 +15,15 @@ import (
 type WebRepository struct {
 	sync.RWMutex                        // RWMutex to synchronize access to data during refresh
 	data         map[string]interface{} // Map to store the configuration data
-	Url          *url.URL               // URL representing the remote HTTP endpoint (web URL)
+	URL          *url.URL               // URL representing the remote HTTP endpoint (web URL)
 }
 
 // GetData returns the configuration data as a map of configuration names to their respective models.
-func (w *WebRepository) GetData() map[string]interface{} {
+func (w *WebRepository) GetData(configName string) (config interface{}, isPresent bool) {
 	w.RLock()
 	defer w.RUnlock()
-	return w.data
+	config, isPresent = w.data[configName]
+	return config, isPresent
 }
 
 // Refresh fetches the YAML file from the remote HTTP endpoint (web URL),
@@ -32,7 +33,7 @@ func (w *WebRepository) Refresh() error {
 	defer w.Unlock()
 
 	// Create an HTTP request to fetch the YAML file from the remote web URL.
-	request, err := http.NewRequestWithContext(context.Background(), http.MethodGet, w.Url.String(), nil)
+	request, err := http.NewRequestWithContext(context.Background(), http.MethodGet, w.URL.String(), nil)
 	if err != nil {
 		logrus.Debug("error creating request")
 		return err
@@ -71,5 +72,5 @@ func NewWebRepository(webURL string) (Repository, error) {
 		return nil, err
 	}
 	// Create and return a new WebRepository with the specified web URL.
-	return &WebRepository{Url: parsedURL}, nil
+	return &WebRepository{URL: parsedURL}, nil
 }

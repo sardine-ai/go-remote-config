@@ -84,10 +84,7 @@ func (c *Client) Close() {
 // the type of the data is not compatible with the type in the repository.
 func (c *Client) GetConfig(name string, data interface{}) error {
 	// Get the configuration data from the repository
-	getData := c.Repository.GetData()
-
-	// Check if the name exists in the retrieved configuration data
-	config, ok := getData[name]
+	config, ok := c.Repository.GetData(name)
 	if !ok {
 		return errors.New("config not found")
 	}
