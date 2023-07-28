@@ -1,5 +1,5 @@
 # go-remote-config
-
+![go build and test](https://github.com/divakarmanoj/go-remote-config/actions/workflows/go.yml/badge.svg)
 
 this is a simple remote config for golang. It supports yaml and json files. It also supports local Files, github repositories and web urls.
 
