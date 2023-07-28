@@ -14,8 +14,15 @@ import (
 // handling configuration data fetched from a remote HTTP endpoint (web URL).
 type WebRepository struct {
 	sync.RWMutex                        // RWMutex to synchronize access to data during refresh
+	Name         string                 // Name of the configuration source
 	data         map[string]interface{} // Map to store the configuration data
 	URL          *url.URL               // URL representing the remote HTTP endpoint (web URL)
+	rawData      []byte                 // Raw data of the YAML configuration file
+}
+
+// GetName returns the name of the configuration source.
+func (w *WebRepository) GetName() string {
+	return w.Name
 }
 
 // GetData returns the configuration data as a map of configuration names to their respective models.
@@ -24,6 +31,13 @@ func (w *WebRepository) GetData(configName string) (config interface{}, isPresen
 	defer w.RUnlock()
 	config, isPresent = w.data[configName]
 	return config, isPresent
+}
+
+// GetRawData returns the raw data of the YAML configuration file.
+func (w *WebRepository) GetRawData() []byte {
+	w.RLock()
+	defer w.RUnlock()
+	return w.rawData
 }
 
 // Refresh fetches the YAML file from the remote HTTP endpoint (web URL),
@@ -45,7 +59,12 @@ func (w *WebRepository) Refresh() error {
 		logrus.Debug("error doing request")
 		return err
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			logrus.WithError(err).Debug("error closing response body")
+		}
+	}(resp.Body)
 
 	// Read the file content from the response body.
 	data, err := io.ReadAll(resp.Body)
@@ -61,16 +80,8 @@ func (w *WebRepository) Refresh() error {
 		return err
 	}
 
-	return nil
-}
+	// Store the raw data of the YAML file.
+	w.rawData = data
 
-// NewWebRepository creates a new WebRepository with the provided web URL.
-func NewWebRepository(webURL string) (Repository, error) {
-	// Parse the web URL into a URL representation.
-	parsedURL, err := url.Parse(webURL)
-	if err != nil {
-		return nil, err
-	}
-	// Create and return a new WebRepository with the specified web URL.
-	return &WebRepository{URL: parsedURL}, nil
+	return nil
 }

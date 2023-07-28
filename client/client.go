@@ -1,4 +1,4 @@
-package go_remote_config
+package client
 
 import (
 	"context"
@@ -100,4 +100,66 @@ func (c *Client) GetConfig(name string, data interface{}) error {
 	}
 
 	return nil
+}
+
+// GetConfigArrayOfStrings retrieves the configuration with the given name from the repository
+func (c *Client) GetConfigArrayOfStrings(name string) ([]string, error) {
+	// Get the configuration data from the repository
+	config, ok := c.Repository.GetData(name)
+	if !ok {
+		return nil, errors.New("config not found")
+	}
+
+	configArray, ok := config.([]string)
+	if !ok {
+		return nil, errors.New("config is not an array of strings")
+	}
+
+	return configArray, nil
+}
+
+// GetConfigString retrieves the configuration with the given name from the repository
+func (c *Client) GetConfigString(name string) (string, error) {
+	// Get the configuration data from the repository
+	config, ok := c.Repository.GetData(name)
+	if !ok {
+		return "", errors.New("config not found")
+	}
+
+	configString, ok := config.(string)
+	if !ok {
+		return "", errors.New("config is not a string")
+	}
+
+	return configString, nil
+}
+
+// GetConfigInt64 retrieves the configuration with the given name from the repository
+func (c *Client) GetConfigInt(name string) (int, error) {
+	// Get the configuration data from the repository
+	config, ok := c.Repository.GetData(name)
+	if !ok {
+		return 0, errors.New("config not found")
+	}
+	configInt, ok := config.(int)
+	if !ok {
+		return 0, errors.New("config is not an int64")
+	}
+
+	return configInt, nil
+}
+
+// GetConfigInt64 retrieves the configuration with the given name from the repository
+func (c *Client) GetConfigFloat(name string) (float64, error) {
+	// Get the configuration data from the repository
+	config, ok := c.Repository.GetData(name)
+	if !ok {
+		return 0, errors.New("config not found")
+	}
+	configInt, ok := config.(float64)
+	if !ok {
+		return 0, errors.New("config is not an int64")
+	}
+
+	return configInt, nil
 }

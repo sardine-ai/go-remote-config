@@ -1,4 +1,4 @@
-package go_remote_config
+package client
 
 import (
 	"context"
@@ -82,13 +82,23 @@ func TestNewClient(t *testing.T) {
 			if !reflect.DeepEqual(hobbies, []string{"Reading", "Cooking", "Hiking", "Swimming", "Coding"}) {
 				t.Errorf("Expected hobbies to contain Reading, Cooking, Hiking, Swimming, Coding, got %v", hobbies)
 			}
-			var age int
+			var age int64
 			err = client.GetConfig("age", &age)
 			if err != nil {
 				t.Errorf("Error getting age: %s", err.Error())
 			}
 			if age != 30 {
 				t.Errorf("Expected age to be 30, got %d", age)
+			}
+			var intAge int
+			intAge, err = client.GetConfigInt("age")
+			if intAge != 30 {
+				t.Errorf("Expected age to be 30, got %d", intAge)
+			}
+			var floatAge float64
+			floatAge, err = client.GetConfigFloat("float_age")
+			if floatAge != 303984756986439880155862132370440192 {
+				t.Errorf("Expected age to be 30, got %f", floatAge)
 			}
 		})
 	}
@@ -168,13 +178,23 @@ func TestNewClient(t *testing.T) {
 //				if !reflect.DeepEqual(hobbies, []string{"Reading", "Cooking", "Hiking", "Swimming", "Coding"}) {
 //					t.Errorf("Expected hobbies to contain Reading, Cooking, Hiking, Swimming, Coding, got %v", hobbies)
 //				}
-//				var age int
+//				var age int64
 //				err = client.GetConfig("age", &age)
 //				if err != nil {
 //					t.Errorf("Error getting age: %s", err.Error())
 //				}
 //				if age != 30 {
 //					t.Errorf("Expected age to be 30, got %d", age)
+//				}
+//				var intAge int
+//				intAge, err = client.GetConfigInt("age")
+//				if intAge != 30 {
+//					t.Errorf("Expected age to be 30, got %d", intAge)
+//				}
+//				var floatAge float64
+//				floatAge, err = client.GetConfigFloat("float_age")
+//				if floatAge != 303984756986439880155862132370440192 {
+//					t.Errorf("Expected age to be 30, got %f", floatAge)
 //				}
 //				time.Sleep(100 * time.Millisecond)
 //			}

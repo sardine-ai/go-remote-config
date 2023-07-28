@@ -4,20 +4,29 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="311d5dea-585b-4731-8306-a2ec96d4bb68" name="Changes" comment="Added test and changes config">
-      <change beforePath="$PROJECT_DIR$/client.go" beforeDir="false" afterPath="$PROJECT_DIR$/client.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/client_test.go" afterDir="false" />
+    <list default="true" id="311d5dea-585b-4731-8306-a2ec96d4bb68" name="Changes" comment="Server">
+      <change afterPath="$PROJECT_DIR$/server/server.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/server_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client.go" beforeDir="false" afterPath="$PROJECT_DIR$/client/client.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/client/client_test.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/file_repository.go" beforeDir="false" afterPath="$PROJECT_DIR$/source/file_repository.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/gcs_repository.go" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/source/git_repository.go" beforeDir="false" afterPath="$PROJECT_DIR$/source/git_repository.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/repository.go" beforeDir="false" afterPath="$PROJECT_DIR$/source/repository.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/s3_repository.go" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/source/web_repository.go" beforeDir="false" afterPath="$PROJECT_DIR$/source/web_repository.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/test.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Go File" />
+      </list>
+    </option>
   </component>
   <component name="GOROOT" url="file://$USER_HOME$/go/go1.20.5" />
   <component name="Git.Settings">
@@ -30,6 +39,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "DefaultGoTemplateProperty": "Go File",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.go.formatter.settings.were.checked": "true",
     "RunOnceActivity.go.migrated.go.modules.settings": "true",
@@ -43,7 +53,12 @@
     "node.js.selected.package.eslint": "(autodetect)"
   }
 }]]></component>
-  <component name="RunManager" selected="Go Test.TestNewRaceClient in github.com/divakarmanoj/go-remote-config">
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/client" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Go Test.TestNewServer in github.com/divakarmanoj/go-remote-config/servers">
     <configuration name="TestNewClient/FileRepository in github.com/divakarmanoj/go-remote-config" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="go-remote-config" />
       <working_directory value="$PROJECT_DIR$" />
@@ -53,17 +68,6 @@
       <filePath value="$PROJECT_DIR$" />
       <framework value="gotest" />
       <pattern value="^\QTestNewClient\E$/^\QFileRepository\E$" />
-      <method v="2" />
-    </configuration>
-    <configuration name="TestNewClient/WebRepository in github.com/divakarmanoj/go-remote-config" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
-      <module name="go-remote-config" />
-      <working_directory value="$PROJECT_DIR$" />
-      <kind value="PACKAGE" />
-      <package value="github.com/divakarmanoj/go-remote-config" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$" />
-      <framework value="gotest" />
-      <pattern value="^\QTestNewClient\E$/^\QWebRepository\E$" />
       <method v="2" />
     </configuration>
     <configuration name="TestNewClient/gitRepository in github.com/divakarmanoj/go-remote-config" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
@@ -100,13 +104,26 @@
       <pattern value="^\QTestNewRaceClient\E$/^\QgitRepository\E$" />
       <method v="2" />
     </configuration>
+    <configuration name="TestNewServer in github.com/divakarmanoj/go-remote-config/servers" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="go-remote-config" />
+      <working_directory value="$PROJECT_DIR$/servers" />
+      <go_parameters value="-race" />
+      <root_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="github.com/divakarmanoj/go-remote-config/servers" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestNewServer\E$" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Go Test.TestNewServer in github.com/divakarmanoj/go-remote-config/servers" />
+        <item itemvalue="Go Test.TestNewClient/FileRepository in github.com/divakarmanoj/go-remote-config" />
         <item itemvalue="Go Test.TestNewRaceClient in github.com/divakarmanoj/go-remote-config" />
         <item itemvalue="Go Test.TestNewRaceClient/gitRepository in github.com/divakarmanoj/go-remote-config" />
         <item itemvalue="Go Test.TestNewClient/gitRepository in github.com/divakarmanoj/go-remote-config" />
-        <item itemvalue="Go Test.TestNewClient/WebRepository in github.com/divakarmanoj/go-remote-config" />
-        <item itemvalue="Go Test.TestNewClient/FileRepository in github.com/divakarmanoj/go-remote-config" />
       </list>
     </recent_temporary>
   </component>
@@ -116,7 +133,9 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Added test and changes config" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added test and changes config" />
+    <MESSAGE value="Added Test and fixed race condition" />
+    <MESSAGE value="Server" />
+    <option name="LAST_COMMIT_MESSAGE" value="Server" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>
@@ -125,14 +144,24 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/client_test.go</url>
-          <line>2</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$USER_HOME$/go/pkg/mod/github.com/go-git/go-git/v5@v5.8.0/worktree.go</url>
           <line>106</line>
           <option name="timeStamp" value="13" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/source/git_repository.go</url>
+          <line>53</line>
+          <option name="timeStamp" value="16" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/server/server.go</url>
+          <line>42</line>
+          <option name="timeStamp" value="18" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/source/git_repository.go</url>
+          <line>107</line>
+          <option name="timeStamp" value="19" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

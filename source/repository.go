@@ -4,8 +4,12 @@ package source
 // Any type implementing this interface must provide methods to retrieve the configuration data
 // and to refresh the data when required.
 type Repository interface {
+	GetName() string
 	// GetData returns the configuration data as a map of configuration names to their respective models.
 	GetData(string) (interface{}, bool)
+
+	// GetRawData returns the raw data of the configuration file.
+	GetRawData() []byte
 
 	// Refresh updates the configuration data by fetching the latest data from the data source,
 	// such as a file, database, or remote service. The method should handle any necessary

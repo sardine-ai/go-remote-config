@@ -4,7 +4,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 	"os"
-	"path/filepath"
 	"sync"
 )
 
@@ -12,16 +11,30 @@ import (
 // handling configuration data stored in a YAML file.
 type FileRepository struct {
 	sync.RWMutex                        // RWMutex to synchronize access to data during refresh
+	Name         string                 // Name of the configuration source
 	Path         string                 // File path of the YAML configuration file
 	data         map[string]interface{} // Map to store the configuration data
+	rawData      []byte                 // Raw data of the YAML configuration file
+}
+
+// GetName returns the name of the configuration source.
+func (f *FileRepository) GetName() string {
+	return f.Name
 }
 
 // GetData returns the configuration data as a map of configuration names to their respective models.
-func (w *FileRepository) GetData(configName string) (config interface{}, isPresent bool) {
-	w.RLock()
-	defer w.RUnlock()
-	config, isPresent = w.data[configName]
+func (f *FileRepository) GetData(configName string) (config interface{}, isPresent bool) {
+	f.RLock()
+	defer f.RUnlock()
+	config, isPresent = f.data[configName]
 	return config, isPresent
+}
+
+// GetRawData returns the raw data of the YAML configuration file.
+func (f *FileRepository) GetRawData() []byte {
+	f.RLock()
+	defer f.RUnlock()
+	return f.rawData
 }
 
 // Refresh reads the YAML file, unmarshals it into the data map.
@@ -43,31 +56,8 @@ func (f *FileRepository) Refresh() error {
 		return err
 	}
 
+	// Store the raw data of the YAML file
+	f.rawData = data
+
 	return nil
-}
-
-// NewFileRepository creates a new FileRepository with the provided file path.
-// It converts the file path to an absolute path and creates a URL representation
-// for the file.
-func NewFileRepository(path string) (Repository, error) {
-	// Convert the file path to an absolute path
-	path, err := makeAbsoluteFilePath(path)
-	if err != nil {
-		return nil, err
-	}
-
-	// Create and return a new FileRepository with the absolute path and URL.
-	return &FileRepository{Path: path}, nil
-}
-
-// makeAbsoluteFilePath converts the input file path to an absolute path.
-func makeAbsoluteFilePath(filePath string) (string, error) {
-	// Convert the input file path to an absolute path.
-	absPath, err := filepath.Abs(filePath)
-	if err != nil {
-		logrus.WithError(err).Error("error getting absolute path")
-		return "", err
-	}
-
-	return absPath, nil
 }

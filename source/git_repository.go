@@ -22,6 +22,7 @@ import (
 // handling configuration data stored in a YAML file within a Git repository.
 type GitRepository struct {
 	sync.RWMutex                         // RWMutex to synchronize access to data during refresh
+	Name          string                 // Name of the configuration source
 	data          map[string]interface{} // Map to store the configuration data
 	URL           *url.URL               // URL representing the Git repository URL
 	Path          string                 // Path to the YAML file within the Git repository
@@ -29,6 +30,19 @@ type GitRepository struct {
 	Branch        string                 // Branch to use when cloning the Git repository
 	Auth          *http.BasicAuth        // BasicAuth to use when cloning the Git repository
 	fs            billy.Filesystem       // Filesystem to store the in-memory clone of the repository
+	rawData       []byte                 // Raw data of the YAML configuration file
+}
+
+// GetData returns the configuration data as a map of configuration names to their respective models.
+func (g *GitRepository) GetName() string {
+	return g.Name
+}
+
+// GetRawData returns the raw data of the YAML configuration file.
+func (g *GitRepository) GetRawData() []byte {
+	g.RLock()
+	defer g.RUnlock()
+	return g.rawData
 }
 
 // Refresh reads the YAML file from the Git repository, unmarshals it into the data map.
@@ -81,21 +95,7 @@ func (g *GitRepository) Refresh() error {
 			return err
 		}
 		logrus.Debug("Pulling")
-		// Get the HEAD reference, which points to the current branch
-		ref, err := g.gitRepository.Head()
-		if err != nil {
-			fmt.Printf("Error getting HEAD reference: %v\n", err)
-			os.Exit(1)
-		}
 
-		// Get the name of the current branch from the reference
-		branchName := ref.Name().Short()
-
-		fmt.Printf("Current branch: %s\n", branchName)
-		fmt.Printf("Current branch: %s\n", branchName)
-		fmt.Printf("Current branch: %s\n", branchName)
-		fmt.Printf("Current branch: %s\n", branchName)
-		fmt.Printf("Current branch: %s\n", branchName)
 		pullOptions := &git.PullOptions{
 			Auth: g.Auth,
 		}
@@ -126,7 +126,12 @@ func (g *GitRepository) Refresh() error {
 		fmt.Println("Error opening file:", err)
 		os.Exit(1)
 	}
-	defer file.Close()
+	defer func(file billy.File) {
+		err := file.Close()
+		if err != nil {
+			logrus.WithError(err).Error("error closing file")
+		}
+	}(file)
 
 	// Read the file content from the reader.
 	fileContent, err := io.ReadAll(file)
@@ -142,6 +147,9 @@ func (g *GitRepository) Refresh() error {
 		return err
 	}
 
+	// Store the raw data of the YAML file.
+	g.rawData = fileContent
+
 	return nil
 }
 
@@ -151,15 +159,4 @@ func (g *GitRepository) GetData(configName string) (config interface{}, isPresen
 	defer g.RUnlock()
 	config, isPresent = g.data[configName]
 	return config, isPresent
-}
-
-// NewGitRepository creates a new GitRepository with the provided Git URL and file path.
-func NewGitRepository(gitURL string, path string) (Repository, error) {
-	// Parse the Git URL into a URL representation.
-	parsedURL, err := url.Parse(gitURL)
-	if err != nil {
-		return nil, err
-	}
-	// Create and return a new gitRepository with the Git URL and file path.
-	return &GitRepository{URL: parsedURL, Path: path}, nil
 }
