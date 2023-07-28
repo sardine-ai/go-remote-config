@@ -134,7 +134,7 @@ func (c *Client) GetConfigString(name string) (string, error) {
 	return configString, nil
 }
 
-// GetConfigInt64 retrieves the configuration with the given name from the repository
+// GetConfigInt retrieves the configuration with the given name from the repository
 func (c *Client) GetConfigInt(name string) (int, error) {
 	// Get the configuration data from the repository
 	config, ok := c.Repository.GetData(name)
@@ -149,7 +149,7 @@ func (c *Client) GetConfigInt(name string) (int, error) {
 	return configInt, nil
 }
 
-// GetConfigInt64 retrieves the configuration with the given name from the repository
+// GetConfigFloat retrieves the configuration with the given name from the repository
 func (c *Client) GetConfigFloat(name string) (float64, error) {
 	// Get the configuration data from the repository
 	config, ok := c.Repository.GetData(name)

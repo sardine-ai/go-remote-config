@@ -37,7 +37,7 @@ func (f *FileRepository) GetRawData() []byte {
 	return f.rawData
 }
 
-// Refresh reads the YAML file, unmarshals it into the data map.
+// Refresh reads the YAML file, unmarshal it into the data map.
 func (f *FileRepository) Refresh() error {
 	f.Lock()
 	defer f.Unlock()

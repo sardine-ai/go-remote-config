@@ -33,7 +33,7 @@ type GitRepository struct {
 	rawData       []byte                 // Raw data of the YAML configuration file
 }
 
-// GetData returns the configuration data as a map of configuration names to their respective models.
+// GetName returns the configuration data as a map of configuration names to their respective models.
 func (g *GitRepository) GetName() string {
 	return g.Name
 }
@@ -45,7 +45,7 @@ func (g *GitRepository) GetRawData() []byte {
 	return g.rawData
 }
 
-// Refresh reads the YAML file from the Git repository, unmarshals it into the data map.
+// Refresh reads the YAML file from the Git repository, unmarshal it into the data map.
 func (g *GitRepository) Refresh() error {
 	g.Lock()
 	defer g.Unlock()

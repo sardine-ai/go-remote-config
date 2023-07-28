@@ -153,7 +153,7 @@ func TestNewClient(t *testing.T) {
 //					Country string `yaml:"country"`
 //					Zip     string `yaml:"zip_code"`
 //				}
-//				var address Address
+//				var address
 //				err = client.GetConfig("address", &address)
 //				if err != nil {
 //					t.Errorf("Error getting address: %s", err.Error())
