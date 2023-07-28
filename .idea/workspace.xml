@@ -1,133 +1,82 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="AnalysisUIOptions">
-    <option name="ANALYZE_INJECTED_CODE" value="false" />
-  </component>
   <component name="AutoImportSettings">
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="311d5dea-585b-4731-8306-a2ec96d4bb68" name="Changes" comment="Fix errors.">
-      <change afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
+    <list default="true" id="75e9e61d-9a6a-4b42-8939-562105ce586b" name="Changes" comment="Readme">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="FileTemplateManagerImpl">
-    <option name="RECENT_TEMPLATES">
-      <list>
-        <option value="Go File" />
-      </list>
-    </option>
-  </component>
-  <component name="GOROOT" url="file://$USER_HOME$/go/go1.20.5" />
+  <component name="GOROOT" url="file://$USER_HOME$/go/go1.19.5" />
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="MarkdownSettingsMigration">
-    <option name="stateVersion" value="1" />
+  <component name="GoLibraries">
+    <option name="indexEntireGoPath" value="true" />
   </component>
-  <component name="ProblemsViewState">
-    <option name="selectedTabId" value="ProjectErrors" />
+  <component name="ProjectId" id="2TBPTcFm9HkVK6iy4WniHVI4PTs" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
   </component>
-  <component name="ProjectId" id="2TAwbvHjDGClieFrVZpKkgYkimo" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "DefaultGoTemplateProperty": "Go File",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.go.formatter.settings.were.checked": "true",
-    "RunOnceActivity.go.migrated.go.modules.settings": "true",
-    "RunOnceActivity.go.modules.go.list.on.any.changes.was.set": "true",
-    "WebServerToolWindowFactoryState": "false",
-    "git-widget-placeholder": "go-only",
-    "go.import.settings.migrated": "true",
-    "go.sdk.automatically.set": "true",
-    "last_opened_file_path": "/Users/divakarmanoj/dev/go/src/go-remote-config",
-    "node.js.detected.package.eslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "run.code.analysis.last.selected.profile": "pProject Default",
-    "settings.editor.selected.configurable": "preferences.fileTypes"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.formatter.settings.were.checked&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.migrated.go.modules.settings&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.modules.go.list.on.any.changes.was.set&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;go.import.settings.migrated&quot;: &quot;true&quot;,
+    &quot;go.sdk.automatically.set&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/divakarmanoj&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;goland.project.structure&quot;
   }
-}]]></component>
-  <component name="RecentsManager">
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/client" />
-    </key>
-  </component>
-  <component name="RunManager" selected="Go Test.TestNewServer in github.com/divakarmanoj/go-remote-config/servers">
-    <configuration name="TestNewClient/FileRepository in github.com/divakarmanoj/go-remote-config" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+}</component>
+  <component name="RunManager" selected="Go Test.TestNewClient in github.com/divakarmanoj/go-remote-config/client">
+    <configuration name="TestNewClient in github.com/divakarmanoj/go-remote-config/client" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="go-remote-config" />
-      <working_directory value="$PROJECT_DIR$" />
-      <kind value="PACKAGE" />
-      <package value="github.com/divakarmanoj/go-remote-config" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$" />
-      <framework value="gotest" />
-      <pattern value="^\QTestNewClient\E$/^\QFileRepository\E$" />
-      <method v="2" />
-    </configuration>
-    <configuration name="TestNewClient/gitRepository in github.com/divakarmanoj/go-remote-config" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
-      <module name="go-remote-config" />
-      <working_directory value="$PROJECT_DIR$" />
-      <kind value="PACKAGE" />
-      <package value="github.com/divakarmanoj/go-remote-config" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$" />
-      <framework value="gotest" />
-      <pattern value="^\QTestNewClient\E$/^\QgitRepository\E$" />
-      <method v="2" />
-    </configuration>
-    <configuration name="TestNewRaceClient in github.com/divakarmanoj/go-remote-config" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
-      <module name="go-remote-config" />
-      <working_directory value="$PROJECT_DIR$" />
-      <go_parameters value="-race" />
-      <kind value="PACKAGE" />
-      <package value="github.com/divakarmanoj/go-remote-config" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$" />
-      <framework value="gotest" />
-      <pattern value="^\QTestNewRaceClient\E$" />
-      <method v="2" />
-    </configuration>
-    <configuration name="TestNewRaceClient/gitRepository in github.com/divakarmanoj/go-remote-config" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
-      <module name="go-remote-config" />
-      <working_directory value="$PROJECT_DIR$" />
-      <kind value="PACKAGE" />
-      <package value="github.com/divakarmanoj/go-remote-config" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$" />
-      <framework value="gotest" />
-      <pattern value="^\QTestNewRaceClient\E$/^\QgitRepository\E$" />
-      <method v="2" />
-    </configuration>
-    <configuration name="TestNewServer in github.com/divakarmanoj/go-remote-config/servers" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
-      <module name="go-remote-config" />
-      <working_directory value="$PROJECT_DIR$/servers" />
-      <go_parameters value="-race" />
+      <working_directory value="$PROJECT_DIR$/client" />
       <root_directory value="$PROJECT_DIR$" />
       <kind value="PACKAGE" />
-      <package value="github.com/divakarmanoj/go-remote-config/servers" />
+      <package value="github.com/divakarmanoj/go-remote-config/client" />
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
       <framework value="gotest" />
-      <pattern value="^\QTestNewServer\E$" />
+      <pattern value="^\QTestNewClient\E$" />
       <method v="2" />
     </configuration>
+    <configuration name="go test go-remote-config" type="GoTestRunConfiguration" factoryName="Go Test" nameIsGenerated="true">
+      <module name="go-remote-config" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="DIRECTORY" />
+      <package value="github.com/divakarmanoj/go-remote-config" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Go Test.go test go-remote-config" />
+      <item itemvalue="Go Test.TestNewClient in github.com/divakarmanoj/go-remote-config/client" />
+    </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Go Test.TestNewServer in github.com/divakarmanoj/go-remote-config/servers" />
-        <item itemvalue="Go Test.TestNewClient/FileRepository in github.com/divakarmanoj/go-remote-config" />
-        <item itemvalue="Go Test.TestNewRaceClient in github.com/divakarmanoj/go-remote-config" />
-        <item itemvalue="Go Test.TestNewRaceClient/gitRepository in github.com/divakarmanoj/go-remote-config" />
-        <item itemvalue="Go Test.TestNewClient/gitRepository in github.com/divakarmanoj/go-remote-config" />
+        <item itemvalue="Go Test.TestNewClient in github.com/divakarmanoj/go-remote-config/client" />
       </list>
     </recent_temporary>
   </component>
@@ -136,39 +85,9 @@
     <option name="version" value="3" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Added test and changes config" />
-    <MESSAGE value="Added Test and fixed race condition" />
-    <MESSAGE value="Server" />
-    <MESSAGE value="Fix errors." />
-    <option name="LAST_COMMIT_MESSAGE" value="Fix errors." />
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$USER_HOME$/go/pkg/mod/github.com/go-git/go-git/v5@v5.8.0/worktree.go</url>
-          <line>106</line>
-          <option name="timeStamp" value="13" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/source/git_repository.go</url>
-          <line>53</line>
-          <option name="timeStamp" value="16" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/server/server.go</url>
-          <line>42</line>
-          <option name="timeStamp" value="18" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/source/git_repository.go</url>
-          <line>107</line>
-          <option name="timeStamp" value="19" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
   </component>
 </project>

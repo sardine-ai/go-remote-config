@@ -25,7 +25,7 @@ func TestNewClient(t *testing.T) {
 	}{
 		{
 			name:            "FileRepository",
-			repository:      &source.FileRepository{Path: "test.yaml"},
+			repository:      &source.FileRepository{Path: "../test.yaml"},
 			refreshInterval: 10 * time.Second,
 		},
 		{
@@ -120,7 +120,7 @@ func TestNewClient(t *testing.T) {
 //	}{
 //		{
 //			name:            "FileRepository",
-//			repository:      &source.FileRepository{Path: "test.yaml"},
+//			repository:      &source.FileRepository{Path: "../test.yaml"},
 //			refreshInterval: 1 * time.Second,
 //		},
 //		{
