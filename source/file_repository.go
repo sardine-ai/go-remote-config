@@ -1,83 +1,63 @@
 package source
 
 import (
-	"context"
 	"github.com/sirupsen/logrus"
-	"net/url"
+	"gopkg.in/yaml.v3"
 	"os"
-	"path/filepath"
-	"time"
+	"sync"
 )
 
+// FileRepository is a struct that implements the Repository interface for
+// handling configuration data stored in a YAML file.
 type FileRepository struct {
-	lastUpdateSeconds int64
-	data              string
-	path              string
-	url               *url.URL
+	sync.RWMutex                        // RWMutex to synchronize access to data during refresh
+	Name         string                 // Name of the configuration source
+	Path         string                 // File path of the YAML configuration file
+	data         map[string]interface{} // Map to store the configuration data
+	rawData      []byte                 // Raw data of the YAML configuration file
 }
 
-func (f *FileRepository) GetData(ctx context.Context) (string, error) {
-	if ((time.Now().Unix() - f.lastUpdateSeconds) < 10) && f.data != "" {
-		logrus.WithContext(ctx).Debug("returning cached file")
-		return f.data, nil
-	}
-	data, err := os.ReadFile(f.path)
+// GetName returns the name of the configuration source.
+func (f *FileRepository) GetName() string {
+	return f.Name
+}
+
+// GetData returns the configuration data as a map of configuration names to their respective models.
+func (f *FileRepository) GetData(configName string) (config interface{}, isPresent bool) {
+	f.RLock()
+	defer f.RUnlock()
+	config, isPresent = f.data[configName]
+	return config, isPresent
+}
+
+// GetRawData returns the raw data of the YAML configuration file.
+func (f *FileRepository) GetRawData() []byte {
+	f.RLock()
+	defer f.RUnlock()
+	return f.rawData
+}
+
+// Refresh reads the YAML file, unmarshal it into the data map.
+func (f *FileRepository) Refresh() error {
+	f.Lock()
+	defer f.Unlock()
+
+	// Read the YAML file
+	data, err := os.ReadFile(f.Path)
 	if err != nil {
 		logrus.Debug("error reading file")
-		return "", err
+		return err
 	}
-	f.data = string(data)
-	f.lastUpdateSeconds = time.Now().Unix()
-	return string(data), nil
-}
 
-func (f *FileRepository) GetType() string {
-	return "fs"
-}
-
-func (f *FileRepository) GetPath() string {
-	return f.path
-}
-
-func (f *FileRepository) GetUrl() *url.URL {
-	return f.url
-}
-
-func NewFileRepository(path string) (Repository, error) {
-	toURL, err := filePathToURL(path)
+	// Unmarshal the YAML data into the data map
+	err = yaml.Unmarshal(data, &f.data)
 	if err != nil {
-		return nil, err
-	}
-	path, err = makeAbsoluteFilePath(path)
-	if err != nil {
-		return nil, err
-	}
-	return &FileRepository{path: path, url: toURL}, nil
-}
-
-func filePathToURL(filePath string) (*url.URL, error) {
-	// Convert file path to absolute path, if it's not already absolute.
-	absPath, err := makeAbsoluteFilePath(filePath)
-	if err != nil {
-		return nil, err
+		logrus.Debug("error unmarshalling file")
+		return err
 	}
 
-	// Create a URL from the absolute path.
-	fileURL := &url.URL{
-		Scheme: "file",
-		Path:   absPath,
-	}
+	// Store the raw data of the YAML file
+	f.rawData = data
 
-	return fileURL, nil
-}
-
-func makeAbsoluteFilePath(filePath string) (string, error) {
-	// Convert the input file path to an absolute path.
-	absPath, err := filepath.Abs(filePath)
-	if err != nil {
-		logrus.WithError(err).Error("error getting absolute path")
-		return "", err
-	}
-
-	return absPath, nil
+	return nil
 }

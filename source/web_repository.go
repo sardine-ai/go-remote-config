@@ -3,68 +3,85 @@ package source
 import (
 	"context"
 	"github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v3"
 	"io"
 	"net/http"
 	"net/url"
-	"time"
+	"sync"
 )
 
+// WebRepository is a struct that implements the Repository interface for
+// handling configuration data fetched from a remote HTTP endpoint (web URL).
 type WebRepository struct {
-	lastUpdateSeconds int64
-	data              string
-	url               *url.URL
+	sync.RWMutex                        // RWMutex to synchronize access to data during refresh
+	Name         string                 // Name of the configuration source
+	data         map[string]interface{} // Map to store the configuration data
+	URL          *url.URL               // URL representing the remote HTTP endpoint (web URL)
+	rawData      []byte                 // Raw data of the YAML configuration file
 }
 
-func (w *WebRepository) GetData(ctx context.Context) (string, error) {
-	if ((time.Now().Unix() - w.lastUpdateSeconds) < 10) && w.data != "" {
-		logrus.Debug("returning cached file")
-		return w.data, nil
-	}
-	logrus.Debug("fetching file")
+// GetName returns the name of the configuration source.
+func (w *WebRepository) GetName() string {
+	return w.Name
+}
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, w.url.String(), nil)
+// GetData returns the configuration data as a map of configuration names to their respective models.
+func (w *WebRepository) GetData(configName string) (config interface{}, isPresent bool) {
+	w.RLock()
+	defer w.RUnlock()
+	config, isPresent = w.data[configName]
+	return config, isPresent
+}
+
+// GetRawData returns the raw data of the YAML configuration file.
+func (w *WebRepository) GetRawData() []byte {
+	w.RLock()
+	defer w.RUnlock()
+	return w.rawData
+}
+
+// Refresh fetches the YAML file from the remote HTTP endpoint (web URL),
+// unmarshal it into the data map.
+func (w *WebRepository) Refresh() error {
+	w.Lock()
+	defer w.Unlock()
+
+	// Create an HTTP request to fetch the YAML file from the remote web URL.
+	request, err := http.NewRequestWithContext(context.Background(), http.MethodGet, w.URL.String(), nil)
 	if err != nil {
 		logrus.Debug("error creating request")
-		return "", err
+		return err
 	}
 
+	// Perform the HTTP request to get the YAML file content.
 	resp, err := http.DefaultClient.Do(request)
 	if err != nil {
 		logrus.Debug("error doing request")
-		return "", err
+		return err
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			logrus.WithError(err).Debug("error closing response body")
+		}
+	}(resp.Body)
 
-	logrus.Debug("reading file")
+	// Read the file content from the response body.
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		logrus.Debug("error reading file")
-		return "", err
+		return err
 	}
 
-	logrus.Debug("setting data")
-	w.data = string(data)
-	logrus.Debug("setting lastUpdateSeconds")
-	w.lastUpdateSeconds = time.Now().Unix()
-	return w.data, nil
-}
-
-func (w *WebRepository) GetType() string {
-	return "http"
-}
-
-func (w *WebRepository) GetPath() string {
-	return w.url.String()
-}
-
-func (w *WebRepository) GetUrl() *url.URL {
-	return w.url
-}
-
-func NewWebRepository(webUrl string) (Repository, error) {
-	parsedUrl, err := url.Parse(webUrl)
+	// Unmarshal the YAML data into the data map.
+	err = yaml.Unmarshal(data, &w.data)
 	if err != nil {
-		return nil, err
+		logrus.Debug("error unmarshalling file")
+		return err
 	}
-	return &WebRepository{url: parsedUrl}, nil
+
+	// Store the raw data of the YAML file.
+	w.rawData = data
+
+	return nil
 }

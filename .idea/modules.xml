@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/../go-remote-config-server/.idea/go-remote-config-server.iml" filepath="$PROJECT_DIR$/../go-remote-config-server/.idea/go-remote-config-server.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/go-remote-config.iml" filepath="$PROJECT_DIR$/.idea/go-remote-config.iml" />
     </modules>
   </component>
 </project>

@@ -1,30 +1,96 @@
 # go-remote-config
 
-## Description
-This is a simple remote config server written in Go. It is intended to be used as a remote config server for web and mobile applications.
-The configuration data is in Yaml format
 
-## Usage
- There are two ways data sources used to define the configuration data.
- - File system
-```bash
-go run main.go --path /path/to/config/dir --repo-type fs
-```
- - Git repository
-```bash
-go run main.go --url enter_url_here --repo-type git
-```
-for now only http is supported for git repositories and the url must be a public repository
- - HTTP
-```bash
-go run main.go --url enter_url_here --repo-type http
-```
-the url must be a public url
+this is a simple remote config for golang. It supports yaml and json files. It also supports local Files, github repositories and web urls.
 
-## Configuration
- if you want authentication for the config server you can use the following flag
-```bash
-go run main.go --auth_key enter_auth_key_here
+### Usage
+FileRepository
+```go
+package main
+
+import (
+	"context"
+	"github.com/divakarmanoj/go-remote-config/client"
+	"github.com/divakarmanoj/go-remote-config/source"
+	"time"
+)
+
+func main() {
+	repository := source.FileRepository{
+		Path: "config.yaml",
+		Name: "config",
+	}
+	ctx := context.Background()
+	client := client.NewClient(ctx, &repository, 10*time.Second)
+	var name string
+	err := client.GetConfig("name", &name)
+	if err != nil {
+		return
+	}
+}
+
 ```
-this enables api key authentication for the config server.
- 
+
+Web Repository
+```go
+package main
+
+import (
+	"context"
+	"github.com/divakarmanoj/go-remote-config/client"
+	"github.com/divakarmanoj/go-remote-config/source"
+	"net/url"
+	"time"
+)
+
+func main() {
+	urlParsed, err := url.Parse("https://raw.githubusercontent.com/divakarmanoj/go-remote-config/go-only/test.yaml")
+	if err != nil {
+		return
+	}
+	repository := source.WebRepository{
+		URL:  urlParsed,
+		Name: "config",
+	}
+	ctx := context.Background()
+	client := client.NewClient(ctx, &repository, 10*time.Second)
+	var name string
+	err = client.GetConfig("name", &name)
+	if err != nil {
+		return
+	}
+	println(name)
+}
+```
+Github Repository
+```go
+package main
+
+import (
+	"context"
+	"github.com/divakarmanoj/go-remote-config/client"
+	"github.com/divakarmanoj/go-remote-config/source"
+	"net/url"
+	"time"
+)
+
+func main() {
+	urlParsed, err := url.Parse("https://github.com/divakarmanoj/go-remote-config.git")
+	if err != nil {
+		return
+	}
+	repository := source.GitRepository{
+		URL:    urlParsed,
+		Path:   "test.yaml",
+		Branch: "go-only",
+	}
+	ctx := context.Background()
+	ConfigClient := client.NewClient(ctx, &repository, 10*time.Second)
+	var name string
+	err = ConfigClient.GetConfig("name", &name)
+	if err != nil {
+		return
+	}
+	println(name)
+}
+```

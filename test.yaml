@@ -1,8 +1,10 @@
-name: John Doe
+name: John
+float_age: 303984756986439880155862132370440192
 age: 30
-email: johndoe@example.com
+email: j@.com
 is_employee: true
 address:
+  street: 123 Main St
   city: New York
   country: USA
   zip_code: "10001"
