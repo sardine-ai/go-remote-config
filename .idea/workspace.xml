@@ -4,8 +4,9 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75e9e61d-9a6a-4b42-8939-562105ce586b" name="Changes" comment="Added test coverage.">
+    <list default="true" id="75e9e61d-9a6a-4b42-8939-562105ce586b" name="Changes" comment="Save Github.">
       <change beforePath="$PROJECT_DIR$/.github/workflows/go.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/go.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -121,7 +122,8 @@
     <MESSAGE value="Fixing Tests." />
     <MESSAGE value="ignore server test in CI" />
     <MESSAGE value="Added test coverage." />
-    <option name="LAST_COMMIT_MESSAGE" value="Added test coverage." />
+    <MESSAGE value="Save Github." />
+    <option name="LAST_COMMIT_MESSAGE" value="Save Github." />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>
