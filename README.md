@@ -23,9 +23,9 @@ func main() {
 		Name: "config",
 	}
 	ctx := context.Background()
-	client := client.NewClient(ctx, &repository, 10*time.Second)
+	ConfigClient := client.NewClient(ctx, &repository, 10*time.Second)
 	var name string
-	err := client.GetConfig("name", &name)
+	err := ConfigClient.GetConfig("name", &name)
 	if err != nil {
 		return
 	}
@@ -55,9 +55,9 @@ func main() {
 		Name: "config",
 	}
 	ctx := context.Background()
-	client := client.NewClient(ctx, &repository, 10*time.Second)
+	ConfigClient := client.NewClient(ctx, &repository, 10*time.Second)
 	var name string
-	err = client.GetConfig("name", &name)
+	err = ConfigClient.GetConfig("name", &name)
 	if err != nil {
 		return
 	}
