@@ -12,8 +12,11 @@ import (
 type Client struct {
 	Repository      source.Repository
 	RefreshInterval time.Duration
+	isClosed        bool
 	cancel          context.CancelFunc
 }
+
+var defaultClient *Client
 
 // NewClient creates a new Client with the provided context, repository,
 // and refresh interval. It starts a background goroutine to periodically
@@ -43,7 +46,7 @@ func NewClient(ctx context.Context, repository source.Repository, refreshInterva
 	// Start the background refresh goroutine by calling the refresh function
 	// with the newly created context and the client as arguments.
 	go refresh(ctx, client)
-
+	defaultClient = client
 	// Return the created Client instance, which is now ready to use.
 	return client, nil
 }
@@ -68,6 +71,26 @@ func refresh(ctx context.Context, client *Client) {
 	}
 }
 
+func GetConfig(name string, data interface{}) error {
+	return defaultClient.GetConfig(name, data)
+}
+
+func GetConfigArrayOfStrings(name string) ([]string, error) {
+	return defaultClient.GetConfigArrayOfStrings(name)
+}
+
+func GetConfigString(name string) (string, error) {
+	return defaultClient.GetConfigString(name)
+}
+
+func GetConfigInt(name string) (int, error) {
+	return defaultClient.GetConfigInt(name)
+}
+
+func GetConfigFloat(name string) (float64, error) {
+	return defaultClient.GetConfigFloat(name)
+}
+
 // Close stops the background refresh goroutine of the Client by canceling
 // its associated context. This function allows graceful termination of the
 // background routine and prevents potential goroutine leaks. It should be
@@ -77,6 +100,7 @@ func (c *Client) Close() {
 	// This cancels the context, causing the background refresh goroutine
 	// (started by NewClient) to return and terminate gracefully.
 	c.cancel()
+	c.isClosed = true
 }
 
 // GetConfig retrieves the configuration with the given name from the repository
@@ -84,6 +108,9 @@ func (c *Client) Close() {
 // configuration is not found, the data argument is not a non-nil pointer, or
 // the type of the data is not compatible with the type in the repository.
 func (c *Client) GetConfig(name string, data interface{}) error {
+	if c.isClosed {
+		return errors.New("client is closed")
+	}
 	// Get the configuration data from the repository
 	config, ok := c.Repository.GetData(name)
 	if !ok {
@@ -105,6 +132,9 @@ func (c *Client) GetConfig(name string, data interface{}) error {
 
 // GetConfigArrayOfStrings retrieves the configuration with the given name from the repository
 func (c *Client) GetConfigArrayOfStrings(name string) ([]string, error) {
+	if c.isClosed {
+		return nil, errors.New("client is closed")
+	}
 	// Get the configuration data from the repository
 	config, ok := c.Repository.GetData(name)
 	if !ok {
@@ -129,6 +159,9 @@ func (c *Client) GetConfigArrayOfStrings(name string) ([]string, error) {
 
 // GetConfigString retrieves the configuration with the given name from the repository
 func (c *Client) GetConfigString(name string) (string, error) {
+	if c.isClosed {
+		return "", errors.New("client is closed")
+	}
 	// Get the configuration data from the repository
 	config, ok := c.Repository.GetData(name)
 	if !ok {
@@ -145,6 +178,9 @@ func (c *Client) GetConfigString(name string) (string, error) {
 
 // GetConfigInt retrieves the configuration with the given name from the repository
 func (c *Client) GetConfigInt(name string) (int, error) {
+	if c.isClosed {
+		return 0, errors.New("client is closed")
+	}
 	// Get the configuration data from the repository
 	config, ok := c.Repository.GetData(name)
 	if !ok {
@@ -160,6 +196,9 @@ func (c *Client) GetConfigInt(name string) (int, error) {
 
 // GetConfigFloat retrieves the configuration with the given name from the repository
 func (c *Client) GetConfigFloat(name string) (float64, error) {
+	if c.isClosed {
+		return 0, errors.New("client is closed")
+	}
 	// Get the configuration data from the repository
 	config, ok := c.Repository.GetData(name)
 	if !ok {
