@@ -71,24 +71,24 @@ func refresh(ctx context.Context, client *Client) {
 	}
 }
 
-func GetConfig(name string, data interface{}) error {
-	return defaultClient.GetConfig(name, data)
+func GetConfig(name string, data interface{}, defaultValue interface{}) error {
+	return defaultClient.GetConfig(name, data, defaultValue)
 }
 
-func GetConfigArrayOfStrings(name string) ([]string, error) {
-	return defaultClient.GetConfigArrayOfStrings(name)
+func GetConfigArrayOfStrings(name string, defaultValue []string) ([]string, error) {
+	return defaultClient.GetConfigArrayOfStrings(name, defaultValue)
 }
 
-func GetConfigString(name string) (string, error) {
-	return defaultClient.GetConfigString(name)
+func GetConfigString(name string, defaultValue string) (string, error) {
+	return defaultClient.GetConfigString(name, defaultValue)
 }
 
-func GetConfigInt(name string) (int, error) {
-	return defaultClient.GetConfigInt(name)
+func GetConfigInt(name string, defaultValue int) (int, error) {
+	return defaultClient.GetConfigInt(name, defaultValue)
 }
 
-func GetConfigFloat(name string) (float64, error) {
-	return defaultClient.GetConfigFloat(name)
+func GetConfigFloat(name string, defaultValue float64) (float64, error) {
+	return defaultClient.GetConfigFloat(name, defaultValue)
 }
 
 // Close stops the background refresh goroutine of the Client by canceling
@@ -107,23 +107,27 @@ func (c *Client) Close() {
 // and stores it in the provided data pointer. It returns an error if the
 // configuration is not found, the data argument is not a non-nil pointer, or
 // the type of the data is not compatible with the type in the repository.
-func (c *Client) GetConfig(name string, data interface{}) error {
+func (c *Client) GetConfig(name string, data interface{}, defaultValue interface{}) error {
 	if c.isClosed {
+		data = defaultValue
 		return errors.New("client is closed")
 	}
 	// Get the configuration data from the repository
 	config, ok := c.Repository.GetData(name)
 	if !ok {
+		data = defaultValue
 		return errors.New("config not found")
 	}
 	//
 	marshal, err := yaml.Marshal(config)
 	if err != nil {
+		data = defaultValue
 		return err
 	}
 	// Unmarshal the configuration data into the provided data pointer
 	err = yaml.Unmarshal(marshal, data)
 	if err != nil {
+		data = defaultValue
 		return err
 	}
 
@@ -131,25 +135,25 @@ func (c *Client) GetConfig(name string, data interface{}) error {
 }
 
 // GetConfigArrayOfStrings retrieves the configuration with the given name from the repository
-func (c *Client) GetConfigArrayOfStrings(name string) ([]string, error) {
+func (c *Client) GetConfigArrayOfStrings(name string, defaultValue []string) ([]string, error) {
 	if c.isClosed {
-		return nil, errors.New("client is closed")
+		return defaultValue, errors.New("client is closed")
 	}
 	// Get the configuration data from the repository
 	config, ok := c.Repository.GetData(name)
 	if !ok {
-		return nil, errors.New("config not found")
+		return defaultValue, errors.New("config not found")
 	}
 
 	configArray, ok := config.([]interface{})
 	if !ok {
-		return nil, errors.New("config is not an array of strings")
+		return defaultValue, errors.New("config is not an array of strings")
 	}
 	output := []string{}
 	for _, v := range configArray {
 		str, ok := v.(string)
 		if !ok {
-			return nil, errors.New("config is not an array of strings")
+			return defaultValue, errors.New("config is not an array of strings")
 		}
 		output = append(output, str)
 	}
@@ -158,55 +162,55 @@ func (c *Client) GetConfigArrayOfStrings(name string) ([]string, error) {
 }
 
 // GetConfigString retrieves the configuration with the given name from the repository
-func (c *Client) GetConfigString(name string) (string, error) {
+func (c *Client) GetConfigString(name string, defaultValue string) (string, error) {
 	if c.isClosed {
-		return "", errors.New("client is closed")
+		return defaultValue, errors.New("client is closed")
 	}
 	// Get the configuration data from the repository
 	config, ok := c.Repository.GetData(name)
 	if !ok {
-		return "", errors.New("config not found")
+		return defaultValue, errors.New("config not found")
 	}
 
 	configString, ok := config.(string)
 	if !ok {
-		return "", errors.New("config is not a string")
+		return defaultValue, errors.New("config is not a string")
 	}
 
 	return configString, nil
 }
 
 // GetConfigInt retrieves the configuration with the given name from the repository
-func (c *Client) GetConfigInt(name string) (int, error) {
+func (c *Client) GetConfigInt(name string, defaultValue int) (int, error) {
 	if c.isClosed {
-		return 0, errors.New("client is closed")
+		return defaultValue, errors.New("client is closed")
 	}
 	// Get the configuration data from the repository
 	config, ok := c.Repository.GetData(name)
 	if !ok {
-		return 0, errors.New("config not found")
+		return defaultValue, errors.New("config not found")
 	}
 	configInt, ok := config.(int)
 	if !ok {
-		return 0, errors.New("config is not an int64")
+		return defaultValue, errors.New("config is not an int64")
 	}
 
 	return configInt, nil
 }
 
 // GetConfigFloat retrieves the configuration with the given name from the repository
-func (c *Client) GetConfigFloat(name string) (float64, error) {
+func (c *Client) GetConfigFloat(name string, defaultValue float64) (float64, error) {
 	if c.isClosed {
-		return 0, errors.New("client is closed")
+		return defaultValue, errors.New("client is closed")
 	}
 	// Get the configuration data from the repository
 	config, ok := c.Repository.GetData(name)
 	if !ok {
-		return 0, errors.New("config not found")
+		return defaultValue, errors.New("config not found")
 	}
 	configInt, ok := config.(float64)
 	if !ok {
-		return 0, errors.New("config is not an int64")
+		return defaultValue, errors.New("config is not an int64")
 	}
 
 	return configInt, nil

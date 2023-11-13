@@ -96,14 +96,14 @@ func TestNewClient(t *testing.T) {
 			ctx := context.Background()
 			client, err := NewClient(ctx, tc.repository, tc.refreshInterval)
 			var name string
-			err = client.GetConfig("name", &name)
+			err = client.GetConfig("name", &name, nil)
 			if err != nil {
 				t.Errorf("Error getting name: %s", err.Error())
 			}
 			if name != "John" {
 				t.Errorf("Expected name to be John, got %s", name)
 			}
-			name, err = client.GetConfigString("name")
+			name, err = client.GetConfigString("name", "")
 			if err != nil {
 				t.Errorf("Error getting name: %s", err.Error())
 			}
@@ -117,7 +117,7 @@ func TestNewClient(t *testing.T) {
 				Zip     string `yaml:"zip_code"`
 			}
 			var address Address
-			err = client.GetConfig("address", &address)
+			err = client.GetConfig("address", &address, nil)
 			if err != nil {
 				t.Errorf("Error getting address: %s", err.Error())
 			}
@@ -134,7 +134,7 @@ func TestNewClient(t *testing.T) {
 				t.Errorf("Expected zip to be 10001, got %s", address.Zip)
 			}
 			var isEmployee bool
-			err = client.GetConfig("is_employee", &isEmployee)
+			err = client.GetConfig("is_employee", &isEmployee, nil)
 			if err != nil {
 				t.Errorf("Error getting is_employee: %s", err.Error())
 			}
@@ -142,14 +142,14 @@ func TestNewClient(t *testing.T) {
 				t.Errorf("Expected is_employee to be true, got %t", isEmployee)
 			}
 			var hobbies []string
-			err = client.GetConfig("hobbies", &hobbies)
+			err = client.GetConfig("hobbies", &hobbies, nil)
 			if err != nil {
 				t.Errorf("Error getting hobbies: %s", err.Error())
 			}
 			if !reflect.DeepEqual(hobbies, []string{"Reading", "Cooking", "Hiking", "Swimming", "Coding"}) {
 				t.Errorf("Expected hobbies to contain Reading, Cooking, Hiking, Swimming, Coding, got %v", hobbies)
 			}
-			hobbies, err = client.GetConfigArrayOfStrings("hobbies")
+			hobbies, err = client.GetConfigArrayOfStrings("hobbies", nil)
 			if err != nil {
 				t.Errorf("Error getting hobbies: %s", err.Error())
 			}
@@ -157,7 +157,7 @@ func TestNewClient(t *testing.T) {
 				t.Errorf("Expected hobbies to contain Reading, Cooking, Hiking, Swimming, Coding, got %v", hobbies)
 			}
 			var age int64
-			err = client.GetConfig("age", &age)
+			err = client.GetConfig("age", &age, nil)
 			if err != nil {
 				t.Errorf("Error getting age: %s", err.Error())
 			}
@@ -165,12 +165,12 @@ func TestNewClient(t *testing.T) {
 				t.Errorf("Expected age to be 30, got %d", age)
 			}
 			var intAge int
-			intAge, err = client.GetConfigInt("age")
+			intAge, err = client.GetConfigInt("age", 0)
 			if intAge != 30 {
 				t.Errorf("Expected age to be 30, got %d", intAge)
 			}
 			var floatAge float64
-			floatAge, err = client.GetConfigFloat("float_age")
+			floatAge, err = client.GetConfigFloat("float_age", 0)
 			if floatAge != 303984756986439880155862132370440192 {
 				t.Errorf("Expected age to be 30, got %f", floatAge)
 			}
@@ -216,7 +216,7 @@ func TestRefresh(t *testing.T) {
 		t.Errorf("Expected error, got nil")
 	}
 	var count int
-	if client.GetConfig("test", &count) != nil {
+	if client.GetConfig("test", &count, nil) != nil {
 		t.Errorf("Expected error, got nil")
 	}
 	if count != 0 {
@@ -224,7 +224,7 @@ func TestRefresh(t *testing.T) {
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
 	refresh(ctx, client)
-	if client.GetConfig("test", &count) != nil {
+	if client.GetConfig("test", &count, nil) != nil {
 		t.Errorf("Expected error, got nil")
 	}
 	if count != 1 {
