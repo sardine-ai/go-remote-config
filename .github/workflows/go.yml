@@ -25,7 +25,7 @@ jobs:
       run: go build -v ./...
 
     - name: Test
-      run:  go test -race -coverprofile=coverage.txt -coverpkg=./... -v github.com/divakarmanoj/go-remote-config/client github.com/divakarmanoj/go-remote-config/model github.com/divakarmanoj/go-remote-config/source
+      run:  go test -race -coverprofile=coverage.txt -coverpkg=./... -v github.com/sardine-ai/go-remote-config/client github.com/sardine-ai/go-remote-config/model github.com/sardine-ai/go-remote-config/source
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v3

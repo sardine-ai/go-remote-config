@@ -2,7 +2,7 @@ package server
 
 import (
 	"context"
-	"github.com/divakarmanoj/go-remote-config/source"
+	"github.com/sardine-ai/go-remote-config/source"
 	"github.com/go-http-utils/etag"
 	"github.com/sirupsen/logrus"
 	"net/http"

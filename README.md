@@ -1,6 +1,4 @@
 # go-remote-config
-![go build and test](https://github.com/divakarmanoj/go-remote-config/actions/workflows/go.yml/badge.svg)
-[![codecov](https://codecov.io/gh/divakarmanoj/go-remote-config/branch/main/graph/badge.svg?token=6BNZ5FPY9N)](https://codecov.io/gh/divakarmanoj/go-remote-config)
 
 
 this is a simple remote config for golang. It supports yaml and json files. It also supports local Files, github repositories and web urls.
@@ -12,8 +10,8 @@ package main
 
 import (
 	"context"
-	"github.com/divakarmanoj/go-remote-config/client"
-	"github.com/divakarmanoj/go-remote-config/source"
+	"github.com/sardine-ai/go-remote-config/client"
+	"github.com/sardine-ai/go-remote-config/source"
 	"time"
 )
 
@@ -39,14 +37,14 @@ package main
 
 import (
 	"context"
-	"github.com/divakarmanoj/go-remote-config/client"
-	"github.com/divakarmanoj/go-remote-config/source"
+	"github.com/sardine-ai/go-remote-config/client"
+	"github.com/sardine-ai/go-remote-config/source"
 	"net/url"
 	"time"
 )
 
 func main() {
-	urlParsed, err := url.Parse("https://raw.githubusercontent.com/divakarmanoj/go-remote-config/go-only/test.yaml")
+	urlParsed, err := url.Parse("https://raw.githubusercontent.com/sardine-ai/go-remote-config/go-only/test.yaml")
 	if err != nil {
 		return
 	}
@@ -70,14 +68,14 @@ package main
 
 import (
 	"context"
-	"github.com/divakarmanoj/go-remote-config/client"
-	"github.com/divakarmanoj/go-remote-config/source"
+	"github.com/sardine-ai/go-remote-config/client"
+	"github.com/sardine-ai/go-remote-config/source"
 	"net/url"
 	"time"
 )
 
 func main() {
-	urlParsed, err := url.Parse("https://github.com/divakarmanoj/go-remote-config.git")
+	urlParsed, err := url.Parse("https://github.com/sardine-ai/go-remote-config.git")
 	if err != nil {
 		return
 	}

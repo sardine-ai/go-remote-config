@@ -3,7 +3,7 @@ package client
 import (
 	"context"
 	"errors"
-	"github.com/divakarmanoj/go-remote-config/source"
+	"github.com/sardine-ai/go-remote-config/source"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 	"time"

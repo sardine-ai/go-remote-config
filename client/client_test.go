@@ -4,7 +4,7 @@ import (
 	"cloud.google.com/go/storage"
 	"context"
 	"errors"
-	"github.com/divakarmanoj/go-remote-config/source"
+	"github.com/sardine-ai/go-remote-config/source"
 	"github.com/fullstorydev/emulators/storage/gcsemu"
 	"log"
 	"net/url"
@@ -15,11 +15,11 @@ import (
 )
 
 func TestNewClient(t *testing.T) {
-	urlParsed, err := url.Parse("https://raw.githubusercontent.com/divakarmanoj/go-remote-config/go-only/test.yaml")
+	urlParsed, err := url.Parse("https://raw.githubusercontent.com/sardine-ai/go-remote-config/go-only/test.yaml")
 	if err != nil {
 		t.Errorf("Error parsing url: %s", err.Error())
 	}
-	gitUrlParsed, err := url.Parse("https://github.com/divakarmanoj/go-remote-config.git")
+	gitUrlParsed, err := url.Parse("https://github.com/sardine-ai/go-remote-config.git")
 	if err != nil {
 		t.Errorf("Error parsing url: %s", err.Error())
 	}
@@ -233,11 +233,11 @@ func TestRefresh(t *testing.T) {
 }
 
 //func TestNewRaceClient(t *testing.T) {
-//	urlParsed, err := url.Parse("https://raw.githubusercontent.com/divakarmanoj/go-remote-config/go-only/test.yaml")
+//	urlParsed, err := url.Parse("https://raw.githubusercontent.com/sardine-ai/go-remote-config/go-only/test.yaml")
 //	if err != nil {
 //		t.Errorf("Error parsing url: %s", err.Error())
 //	}
-//	gitUrlParsed, err := url.Parse("https://github.com/divakarmanoj/go-remote-config.git")
+//	gitUrlParsed, err := url.Parse("https://github.com/sardine-ai/go-remote-config.git")
 //	if err != nil {
 //		t.Errorf("Error parsing url: %s", err.Error())
 //	}
