@@ -1,4 +1,4 @@
-module github.com/divakarmanoj/go-remote-config
+module github.com/sardine-ai/go-remote-config
 
 go 1.19
 
