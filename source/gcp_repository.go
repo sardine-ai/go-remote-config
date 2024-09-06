@@ -24,8 +24,8 @@ type GcpStorageRepository struct {
 
 // Refresh reads the YAML file from the GCS bucket, unmarshal it into the data map.
 func (g *GcpStorageRepository) Refresh() error {
-	g.Lock()
-	defer g.Unlock()
+	
+	
 
 	// If the GCS client does not exist, create it.
 	if g.Client == nil {
@@ -54,6 +54,8 @@ func (g *GcpStorageRepository) Refresh() error {
 	}
 
 	// Unmarshal the YAML data into the data map.
+	g.Lock()
+	defer g.Unlock()
 	err = yaml.Unmarshal(fileContent, &g.data)
 	if err != nil {
 		return err
