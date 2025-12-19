@@ -478,6 +478,12 @@ func TestClientStalenessOnError(t *testing.T) {
 	if status.LastRefreshErr == nil {
 		t.Error("Expected last refresh error to be set")
 	}
+
+	// IsHealthy should still return true because data is not stale yet
+	// (transient errors shouldn't cause pod restarts)
+	if !client.IsHealthy() {
+		t.Error("Expected client to be healthy despite refresh error (data not stale)")
+	}
 }
 
 // TestClientIsClosed tests the IsClosed method

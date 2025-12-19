@@ -157,14 +157,16 @@ func (c *Client) GetRefreshStatus() RefreshStatus {
 	return status
 }
 
-// IsHealthy returns true if the client has successfully refreshed recently
-// and has no pending errors. Useful for health check endpoints.
+// IsHealthy returns true if the client has fresh config data.
+// Only checks staleness, not last refresh error, to avoid pod restarts
+// on transient errors (e.g., brief S3 outage). Use GetRefreshStatus()
+// to check LastRefreshErr for alerting/monitoring purposes.
 func (c *Client) IsHealthy() bool {
 	if c.closed.Load() {
 		return false
 	}
 	status := c.GetRefreshStatus()
-	return !status.IsStale && status.LastRefreshErr == nil
+	return !status.IsStale
 }
 
 // getDefaultClient returns the default client in a thread-safe manner.
