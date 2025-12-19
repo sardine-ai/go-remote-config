@@ -43,11 +43,10 @@ func (w *WebRepository) GetRawData() []byte {
 // Refresh fetches the YAML file from the remote HTTP endpoint (web URL),
 // unmarshal it into the data map.
 func (w *WebRepository) Refresh() error {
-	w.Lock()
-	defer w.Unlock()
+	ctx := context.Background()
 
 	// Create an HTTP request to fetch the YAML file from the remote web URL.
-	request, err := http.NewRequestWithContext(context.Background(), http.MethodGet, w.URL.String(), nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, w.URL.String(), nil)
 	if err != nil {
 		logrus.Debug("error creating request")
 		return err
@@ -73,15 +72,19 @@ func (w *WebRepository) Refresh() error {
 		return err
 	}
 
-	// Unmarshal the YAML data into the data map.
-	err = yaml.Unmarshal(data, &w.data)
+	// Unmarshal to temp variable outside lock to prevent data corruption on error
+	var tempData map[string]interface{}
+	err = yaml.Unmarshal(data, &tempData)
 	if err != nil {
 		logrus.Debug("error unmarshalling file")
 		return err
 	}
 
-	// Store the raw data of the YAML file.
+	// Only lock for atomic data swap
+	w.Lock()
+	w.data = tempData
 	w.rawData = data
+	w.Unlock()
 
 	return nil
 }

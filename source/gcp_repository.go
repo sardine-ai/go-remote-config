@@ -26,10 +26,11 @@ type GcpStorageRepository struct {
 
 // Refresh reads the YAML file from the GCS bucket, unmarshal it into the data map.
 func (g *GcpStorageRepository) Refresh() error {
+	ctx := context.Background()
+
 	// Thread-safe client initialization using sync.Once (only if client not pre-configured)
 	if g.Client == nil {
 		g.clientOnce.Do(func() {
-			ctx := context.Background()
 			g.Client, g.clientInitErr = storage.NewClient(ctx)
 		})
 		if g.clientInitErr != nil {
@@ -38,7 +39,6 @@ func (g *GcpStorageRepository) Refresh() error {
 	}
 
 	// Network I/O outside lock for better performance
-	ctx := context.Background()
 	bucket := g.Client.Bucket(g.BucketName)
 	obj := bucket.Object(g.ObjectName)
 	reader, err := obj.NewReader(ctx)
@@ -53,16 +53,19 @@ func (g *GcpStorageRepository) Refresh() error {
 		return err
 	}
 
-	// Only lock for data update
-	g.Lock()
-	defer g.Unlock()
-	err = yaml.Unmarshal(fileContent, &g.data)
+	// Unmarshal to temp variable outside lock to prevent data corruption on error
+	var tempData map[string]interface{}
+	err = yaml.Unmarshal(fileContent, &tempData)
 	if err != nil {
 		return err
 	}
 
-	// Store the raw data of the YAML file.
+	// Only lock for atomic data swap
+	g.Lock()
+	g.data = tempData
 	g.rawData = fileContent
+	g.Unlock()
+
 	return nil
 }
 

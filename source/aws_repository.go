@@ -61,16 +61,19 @@ func (a *AwsS3Repository) Refresh() error {
 		return err
 	}
 
-	// Only lock for data update
-	a.Lock()
-	defer a.Unlock()
-	err = yaml.Unmarshal(fileContent, &a.data)
+	// Unmarshal to temp variable outside lock to prevent data corruption on error
+	var tempData map[string]interface{}
+	err = yaml.Unmarshal(fileContent, &tempData)
 	if err != nil {
 		return err
 	}
 
-	// Store the raw data of the YAML file.
+	// Only lock for atomic data swap
+	a.Lock()
+	a.data = tempData
 	a.rawData = fileContent
+	a.Unlock()
+
 	return nil
 }
 
