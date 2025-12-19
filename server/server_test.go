@@ -303,6 +303,39 @@ func TestServerAuthMiddleware(t *testing.T) {
 	}
 }
 
+// TestServerHealthEndpointsBypassAuth tests that health endpoints don't require authentication
+func TestServerHealthEndpointsBypassAuth(t *testing.T) {
+	repo := newMockRepository("test")
+	ctx := context.Background()
+	server := NewServer(ctx, []source.Repository{repo}, 1*time.Second)
+	server.AuthKey = "secret-key"
+	defer server.Stop()
+
+	handler := server.CreateHandlers()
+	handler = Auth(handler, server.AuthKey)
+
+	// Health endpoints should work without auth key
+	healthEndpoints := []string{"/health", "/ready", "/status"}
+	for _, endpoint := range healthEndpoints {
+		req := httptest.NewRequest("GET", endpoint, nil)
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, req)
+
+		if w.Result().StatusCode != http.StatusOK {
+			t.Errorf("%s: Expected 200 without auth key, got %d", endpoint, w.Result().StatusCode)
+		}
+	}
+
+	// Config endpoint should still require auth
+	req := httptest.NewRequest("GET", "/test", nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	if w.Result().StatusCode != http.StatusUnauthorized {
+		t.Errorf("/test: Expected 401 without auth key, got %d", w.Result().StatusCode)
+	}
+}
+
 // TestServerStop tests that Stop() properly cleans up
 func TestServerStop(t *testing.T) {
 	repo := newMockRepository("test")

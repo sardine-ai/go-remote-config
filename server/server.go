@@ -324,7 +324,6 @@ func (s *Server) CreateHandlers() http.Handler {
 
 	// Repository endpoints
 	for _, repo := range s.Repositories {
-		repo := repo // Capture loop variable to avoid closure bug
 		mux.HandleFunc("/"+repo.GetName(), func(w http.ResponseWriter, r *http.Request) {
 			if r.Method != "GET" && r.Method != "HEAD" {
 				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -342,6 +341,12 @@ func (s *Server) CreateHandlers() http.Handler {
 
 func Auth(next http.Handler, authKey string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Skip auth for health check endpoints (needed for K8s probes)
+		if r.URL.Path == "/health" || r.URL.Path == "/ready" || r.URL.Path == "/status" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		// check banner api key
 		key := r.Header.Get("X-API-KEY")
 		if key == "" {
