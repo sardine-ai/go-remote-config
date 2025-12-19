@@ -342,7 +342,7 @@ func (s *Server) CreateHandlers() http.Handler {
 func Auth(next http.Handler, authKey string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Skip auth for health check endpoints (needed for K8s probes)
-		if r.URL.Path == "/health" || r.URL.Path == "/ready" || r.URL.Path == "/status" {
+		if r.URL.Path == "/health" || r.URL.Path == "/ready" {
 			next.ServeHTTP(w, r)
 			return
 		}

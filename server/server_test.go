@@ -315,7 +315,7 @@ func TestServerHealthEndpointsBypassAuth(t *testing.T) {
 	handler = Auth(handler, server.AuthKey)
 
 	// Health endpoints should work without auth key
-	healthEndpoints := []string{"/health", "/ready", "/status"}
+	healthEndpoints := []string{"/health", "/ready"}
 	for _, endpoint := range healthEndpoints {
 		req := httptest.NewRequest("GET", endpoint, nil)
 		w := httptest.NewRecorder()
@@ -326,13 +326,16 @@ func TestServerHealthEndpointsBypassAuth(t *testing.T) {
 		}
 	}
 
-	// Config endpoint should still require auth
-	req := httptest.NewRequest("GET", "/test", nil)
-	w := httptest.NewRecorder()
-	handler.ServeHTTP(w, req)
+	// Status and config endpoints should still require auth
+	authRequiredEndpoints := []string{"/status", "/test"}
+	for _, endpoint := range authRequiredEndpoints {
+		req := httptest.NewRequest("GET", endpoint, nil)
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, req)
 
-	if w.Result().StatusCode != http.StatusUnauthorized {
-		t.Errorf("/test: Expected 401 without auth key, got %d", w.Result().StatusCode)
+		if w.Result().StatusCode != http.StatusUnauthorized {
+			t.Errorf("%s: Expected 401 without auth key, got %d", endpoint, w.Result().StatusCode)
+		}
 	}
 }
 
