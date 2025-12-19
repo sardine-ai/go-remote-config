@@ -3,6 +3,10 @@ package source
 import (
 	"context"
 	"fmt"
+	"io"
+	"net/url"
+	"sync"
+
 	"github.com/go-git/go-billy/v5"
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-git/v5"
@@ -12,10 +16,6 @@ import (
 	"github.com/go-git/go-git/v5/storage/memory"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
-	"io"
-	"net/url"
-	"os"
-	"sync"
 )
 
 // GitRepository is a struct that implements the Repository interface for
@@ -125,8 +125,7 @@ func (g *GitRepository) Refresh() error {
 	// Open the YAML file from the in-memory filesystem.
 	file, err := g.fs.Open(g.Path)
 	if err != nil {
-		fmt.Println("Error opening file:", err)
-		os.Exit(1)
+		return fmt.Errorf("error opening file %s: %w", g.Path, err)
 	}
 	defer func(file billy.File) {
 		err := file.Close()
@@ -138,8 +137,7 @@ func (g *GitRepository) Refresh() error {
 	// Read the file content from the reader.
 	fileContent, err := io.ReadAll(file)
 	if err != nil {
-		fmt.Println("Error reading file:", err)
-		os.Exit(1)
+		return fmt.Errorf("error reading file %s: %w", g.Path, err)
 	}
 
 	// Unmarshal the YAML data into the data map.

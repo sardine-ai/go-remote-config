@@ -15,28 +15,37 @@ import (
 // AwsS3Repository is a struct that implements the Repository interface for
 // handling configuration data stored in a YAML file within an S3 bucket.
 type AwsS3Repository struct {
-	sync.RWMutex                        // RWMutex to synchronize access to data during refresh
-	Name         string                 // Name of the configuration source
-	data         map[string]interface{} // Map to store the configuration data
-	BucketName   string                 // Name of the S3 bucket
-	ObjectName   string                 // Name of the YAML file within the S3 bucket
-	Client       *s3.Client             // S3 client instance
-	rawData      []byte                 // Raw data of the YAML configuration file
+	sync.RWMutex                         // RWMutex to synchronize access to data during refresh
+	Name          string                 // Name of the configuration source
+	data          map[string]interface{} // Map to store the configuration data
+	BucketName    string                 // Name of the S3 bucket
+	ObjectName    string                 // Name of the YAML file within the S3 bucket
+	Client        *s3.Client             // S3 client instance
+	rawData       []byte                 // Raw data of the YAML configuration file
+	clientOnce    sync.Once              // Ensures client is initialized only once
+	clientInitErr error                  // Stores error from client initialization
 }
 
 // Refresh reads the YAML file from the S3 bucket, unmarshal it into the data map.
 func (a *AwsS3Repository) Refresh() error {
 	ctx := context.Background()
-	// If the S3 client does not exist, create it.
+
+	// Thread-safe client initialization using sync.Once (only if client not pre-configured)
 	if a.Client == nil {
-		cfg, err := config.LoadDefaultConfig(ctx)
-		if err != nil {
-			return fmt.Errorf("failed to load AWS config: %w", err)
+		a.clientOnce.Do(func() {
+			cfg, err := config.LoadDefaultConfig(ctx)
+			if err != nil {
+				a.clientInitErr = fmt.Errorf("failed to load AWS config: %w", err)
+				return
+			}
+			a.Client = s3.NewFromConfig(cfg)
+		})
+		if a.clientInitErr != nil {
+			return a.clientInitErr
 		}
-		a.Client = s3.NewFromConfig(cfg)
 	}
 
-	// Get the YAML file from the S3 bucket.
+	// Network I/O outside lock for better performance
 	result, err := a.Client.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(a.BucketName),
 		Key:    aws.String(a.ObjectName),
@@ -52,7 +61,7 @@ func (a *AwsS3Repository) Refresh() error {
 		return err
 	}
 
-	// Unmarshal the YAML data into the data map.
+	// Only lock for data update
 	a.Lock()
 	defer a.Unlock()
 	err = yaml.Unmarshal(fileContent, &a.data)
