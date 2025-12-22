@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"reflect"
+	"sync"
 	"testing"
 	"time"
 
@@ -277,100 +278,523 @@ func TestRefresh(t *testing.T) {
 	}
 }
 
-//func TestNewRaceClient(t *testing.T) {
-//	urlParsed, err := url.Parse("https://raw.githubusercontent.com/sardine-ai/go-remote-config/go-only/test.yaml")
-//	if err != nil {
-//		t.Errorf("Error parsing url: %s", err.Error())
-//	}
-//	gitUrlParsed, err := url.Parse("https://github.com/sardine-ai/go-remote-config.git")
-//	if err != nil {
-//		t.Errorf("Error parsing url: %s", err.Error())
-//	}
-//	testCases := []struct {
-//		name            string
-//		repository      source.Repository
-//		refreshInterval time.Duration
-//	}{
-//		{
-//			name:            "FileRepository",
-//			repository:      &source.FileRepository{Path: "../test.yaml"},
-//			refreshInterval: 1 * time.Second,
-//		},
-//		{
-//			name:            "WebRepository",
-//			repository:      &source.WebRepository{URL: urlParsed},
-//			refreshInterval: 1 * time.Second,
-//		},
-//		{
-//			name:            "gitRepository",
-//			repository:      &source.GitRepository{URL: gitUrlParsed, Path: "test.yaml", Branch: "go-only"},
-//			refreshInterval: 5 * time.Second,
-//		},
-//	}
-//	for _, tc := range testCases {
-//		t.Run(tc.name, func(t *testing.T) {
-//			ctx := context.Background()
-//			client := NewClient(ctx, tc.repository, tc.refreshInterval)
-//			for i := 0; i < 1000; i++ {
-//				var name string
-//				err := client.GetConfig("name", &name)
-//				if err != nil {
-//					t.Errorf("Error getting name: %s", err.Error())
-//				}
-//				if name != "John" {
-//					t.Errorf("Expected name to be John, got %s", name)
-//				}
-//				type Address struct {
-//					Street  string `yaml:"street"`
-//					City    string `yaml:"city"`
-//					Country string `yaml:"country"`
-//					Zip     string `yaml:"zip_code"`
-//				}
-//				var address
-//				err = client.GetConfig("address", &address)
-//				if err != nil {
-//					t.Errorf("Error getting address: %s", err.Error())
-//				}
-//				if address.Street != "123 Main St" {
-//					t.Errorf("Expected street to be 123 Main St, got %s", address.Street)
-//				}
-//				if address.City != "New York" {
-//					t.Errorf("Expected city to be New York, got %s", address.City)
-//				}
-//				if address.Country != "USA" {
-//					t.Errorf("Expected country to be USA, got %s", address.Country)
-//				}
-//				if address.Zip != "10001" {
-//					t.Errorf("Expected zip to be 10001, got %s", address.Zip)
-//				}
-//				var hobbies []string
-//				err = client.GetConfig("hobbies", &hobbies)
-//				if err != nil {
-//					t.Errorf("Error getting hobbies: %s", err.Error())
-//				}
-//				if !reflect.DeepEqual(hobbies, []string{"Reading", "Cooking", "Hiking", "Swimming", "Coding"}) {
-//					t.Errorf("Expected hobbies to contain Reading, Cooking, Hiking, Swimming, Coding, got %v", hobbies)
-//				}
-//				var age int64
-//				err = client.GetConfig("age", &age)
-//				if err != nil {
-//					t.Errorf("Error getting age: %s", err.Error())
-//				}
-//				if age != 30 {
-//					t.Errorf("Expected age to be 30, got %d", age)
-//				}
-//				var intAge int
-//				intAge, err = client.GetConfigInt("age")
-//				if intAge != 30 {
-//					t.Errorf("Expected age to be 30, got %d", intAge)
-//				}
-//				var floatAge float64
-//				floatAge, err = client.GetConfigFloat("float_age")
-//				if floatAge != 303984756986439880155862132370440192 {
-//					t.Errorf("Expected age to be 30, got %f", floatAge)
-//				}
-//				time.Sleep(100 * time.Millisecond)
-//			}
-//		})
-//	}
-//}
+// mockRepository is a thread-safe mock repository for testing
+type mockRepository struct {
+	mu           sync.RWMutex
+	data         map[string]interface{}
+	refreshCount int
+	shouldError  bool
+	refreshDelay time.Duration
+}
+
+func newMockRepository() *mockRepository {
+	return &mockRepository{
+		data: map[string]interface{}{
+			"name": "test",
+			"age":  30,
+		},
+	}
+}
+
+func (m *mockRepository) GetName() string {
+	return "mock"
+}
+
+func (m *mockRepository) GetData(key string) (interface{}, bool) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	v, ok := m.data[key]
+	return v, ok
+}
+
+func (m *mockRepository) GetRawData() []byte {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return []byte("name: test\nage: 30")
+}
+
+func (m *mockRepository) Refresh() error {
+	if m.refreshDelay > 0 {
+		time.Sleep(m.refreshDelay)
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.refreshCount++
+	if m.shouldError {
+		return errors.New("mock refresh error")
+	}
+	return nil
+}
+
+func (m *mockRepository) getRefreshCount() int {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.refreshCount
+}
+
+func (m *mockRepository) setError(shouldError bool) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.shouldError = shouldError
+}
+
+// TestClientCloseRaceCondition tests that Close() and GetConfig() can be called
+// concurrently without data races. Run with -race flag.
+func TestClientCloseRaceCondition(t *testing.T) {
+	repo := newMockRepository()
+	ctx := context.Background()
+	client, err := NewClient(ctx, repo, 100*time.Millisecond)
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+
+	var wg sync.WaitGroup
+	const numGoroutines = 100
+
+	// Start goroutines that read config
+	for i := 0; i < numGoroutines; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for j := 0; j < 100; j++ {
+				var name string
+				_ = client.GetConfig("name", &name, "default")
+				_, _ = client.GetConfigString("name", "default")
+				_, _ = client.GetConfigInt("age", 0)
+				_ = client.IsClosed()
+				time.Sleep(time.Microsecond)
+			}
+		}()
+	}
+
+	// Close the client while reads are happening
+	time.Sleep(10 * time.Millisecond)
+	client.Close()
+
+	wg.Wait()
+
+	// Verify client is closed
+	if !client.IsClosed() {
+		t.Error("Expected client to be closed")
+	}
+}
+
+// TestClientRefreshRaceCondition tests that refresh goroutine and GetConfig()
+// can run concurrently without data races.
+func TestClientRefreshRaceCondition(t *testing.T) {
+	repo := newMockRepository()
+	repo.refreshDelay = 5 * time.Millisecond
+	ctx := context.Background()
+	client, err := NewClient(ctx, repo, 10*time.Millisecond)
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+	defer client.Close()
+
+	var wg sync.WaitGroup
+	const numGoroutines = 50
+
+	// Start goroutines that read config while refresh is happening
+	for i := 0; i < numGoroutines; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for j := 0; j < 50; j++ {
+				var name string
+				_ = client.GetConfig("name", &name, "default")
+				_, _ = client.GetConfigString("name", "default")
+				_, _ = client.GetConfigArrayOfStrings("hobbies", nil)
+				_ = client.IsHealthy()
+				status := client.GetRefreshStatus()
+				_ = status.IsStale
+				time.Sleep(time.Millisecond)
+			}
+		}()
+	}
+
+	// Wait for some refreshes to happen
+	time.Sleep(100 * time.Millisecond)
+	wg.Wait()
+
+	// Verify refreshes happened
+	if repo.getRefreshCount() < 2 {
+		t.Errorf("Expected at least 2 refreshes, got %d", repo.getRefreshCount())
+	}
+}
+
+// TestClientStalenessTracking tests that staleness is properly tracked
+func TestClientStalenessTracking(t *testing.T) {
+	repo := newMockRepository()
+	ctx := context.Background()
+	client, err := NewClient(ctx, repo, 50*time.Millisecond)
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+	defer client.Close()
+
+	// Check initial status
+	status := client.GetRefreshStatus()
+	if status.RefreshCount != 1 {
+		t.Errorf("Expected 1 refresh, got %d", status.RefreshCount)
+	}
+	if status.LastRefreshErr != nil {
+		t.Errorf("Expected no error, got %v", status.LastRefreshErr)
+	}
+	if status.IsStale {
+		t.Error("Expected not stale initially")
+	}
+	if !client.IsHealthy() {
+		t.Error("Expected client to be healthy")
+	}
+
+	// Wait for another refresh
+	time.Sleep(60 * time.Millisecond)
+	status = client.GetRefreshStatus()
+	if status.RefreshCount < 2 {
+		t.Errorf("Expected at least 2 refreshes, got %d", status.RefreshCount)
+	}
+}
+
+// TestClientStalenessOnError tests that errors are tracked properly
+func TestClientStalenessOnError(t *testing.T) {
+	repo := newMockRepository()
+	ctx := context.Background()
+	client, err := NewClient(ctx, repo, 50*time.Millisecond)
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+	defer client.Close()
+
+	// Make refresh fail
+	repo.setError(true)
+
+	// Wait for a failed refresh
+	time.Sleep(60 * time.Millisecond)
+
+	status := client.GetRefreshStatus()
+	if status.RefreshErrors == 0 {
+		t.Error("Expected at least 1 refresh error")
+	}
+	if status.LastRefreshErr == nil {
+		t.Error("Expected last refresh error to be set")
+	}
+
+	// IsHealthy should still return true because data is not stale yet
+	// (transient errors shouldn't cause pod restarts)
+	if !client.IsHealthy() {
+		t.Error("Expected client to be healthy despite refresh error (data not stale)")
+	}
+}
+
+// TestClientIsClosed tests the IsClosed method
+func TestClientIsClosed(t *testing.T) {
+	repo := newMockRepository()
+	ctx := context.Background()
+	client, err := NewClient(ctx, repo, 1*time.Second)
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+
+	if client.IsClosed() {
+		t.Error("Expected client to not be closed initially")
+	}
+
+	client.Close()
+
+	if !client.IsClosed() {
+		t.Error("Expected client to be closed after Close()")
+	}
+
+	// GetConfig should return error after close
+	var name string
+	err = client.GetConfig("name", &name, nil)
+	if err == nil {
+		t.Error("Expected error when getting config after close")
+	}
+}
+
+// TestClientIsHealthyAfterClose tests IsHealthy after close
+func TestClientIsHealthyAfterClose(t *testing.T) {
+	repo := newMockRepository()
+	ctx := context.Background()
+	client, err := NewClient(ctx, repo, 1*time.Second)
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+
+	if !client.IsHealthy() {
+		t.Error("Expected client to be healthy initially")
+	}
+
+	client.Close()
+
+	if client.IsHealthy() {
+		t.Error("Expected client to not be healthy after close")
+	}
+}
+
+// TestConcurrentCloseOperations tests multiple Close calls
+func TestConcurrentCloseOperations(t *testing.T) {
+	repo := newMockRepository()
+	ctx := context.Background()
+	client, err := NewClient(ctx, repo, 1*time.Second)
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+
+	var wg sync.WaitGroup
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			client.Close()
+		}()
+	}
+	wg.Wait()
+
+	if !client.IsClosed() {
+		t.Error("Expected client to be closed")
+	}
+}
+
+// TestGetConfigAfterCloseReturnsDefault tests that default values are returned after close
+func TestGetConfigAfterCloseReturnsDefault(t *testing.T) {
+	repo := newMockRepository()
+	ctx := context.Background()
+	client, err := NewClient(ctx, repo, 1*time.Second)
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+
+	client.Close()
+
+	var name string
+	err = client.GetConfig("name", &name, "default_value")
+	if err == nil {
+		t.Error("Expected error after close")
+	}
+	if name != "default_value" {
+		t.Errorf("Expected default value 'default_value', got '%s'", name)
+	}
+
+	strVal, err := client.GetConfigString("name", "default_str")
+	if err == nil {
+		t.Error("Expected error after close")
+	}
+	if strVal != "default_str" {
+		t.Errorf("Expected 'default_str', got '%s'", strVal)
+	}
+
+	intVal, err := client.GetConfigInt("age", 42)
+	if err == nil {
+		t.Error("Expected error after close")
+	}
+	if intVal != 42 {
+		t.Errorf("Expected 42, got %d", intVal)
+	}
+
+	floatVal, err := client.GetConfigFloat("score", 3.14)
+	if err == nil {
+		t.Error("Expected error after close")
+	}
+	if floatVal != 3.14 {
+		t.Errorf("Expected 3.14, got %f", floatVal)
+	}
+
+	arrVal, err := client.GetConfigArrayOfStrings("items", []string{"default"})
+	if err == nil {
+		t.Error("Expected error after close")
+	}
+	if !reflect.DeepEqual(arrVal, []string{"default"}) {
+		t.Errorf("Expected ['default'], got %v", arrVal)
+	}
+}
+
+// TestDefaultClientConcurrentAccess tests that concurrent access to the default
+// client via global functions and SetDefaultClient is thread-safe.
+func TestDefaultClientConcurrentAccess(t *testing.T) {
+	// Create initial client
+	repo1 := newMockRepository()
+	ctx := context.Background()
+	client1, err := NewClient(ctx, repo1, 1*time.Second)
+	if err != nil {
+		t.Fatalf("Failed to create client1: %v", err)
+	}
+	defer client1.Close()
+
+	var wg sync.WaitGroup
+	const numGoroutines = 50
+
+	// Start goroutines that read config using global functions
+	for i := 0; i < numGoroutines; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for j := 0; j < 100; j++ {
+				// Use global functions that access defaultClient
+				_, _ = GetConfigString("name", "default")
+				_, _ = GetConfigInt("age", 0)
+				_, _ = GetConfigFloat("score", 0.0)
+				_, _ = GetConfigArrayOfStrings("hobbies", nil)
+				var data string
+				_ = GetConfig("name", &data, "default")
+			}
+		}()
+	}
+
+	// Start goroutines that change the default client
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for j := 0; j < 10; j++ {
+				repo := newMockRepository()
+				newClient, err := NewClient(ctx, repo, 1*time.Second)
+				if err != nil {
+					continue
+				}
+				// Also test SetDefaultClient
+				SetDefaultClient(newClient)
+				time.Sleep(time.Microsecond)
+				newClient.Close()
+			}
+		}()
+	}
+
+	wg.Wait()
+}
+
+// TestSetDefaultClientThreadSafety specifically tests SetDefaultClient for race conditions.
+func TestSetDefaultClientThreadSafety(t *testing.T) {
+	ctx := context.Background()
+
+	// Create multiple clients
+	clients := make([]*Client, 10)
+	for i := 0; i < 10; i++ {
+		repo := newMockRepository()
+		client, err := NewClient(ctx, repo, 1*time.Second)
+		if err != nil {
+			t.Fatalf("Failed to create client %d: %v", i, err)
+		}
+		clients[i] = client
+	}
+	defer func() {
+		for _, c := range clients {
+			c.Close()
+		}
+	}()
+
+	var wg sync.WaitGroup
+	const numGoroutines = 100
+
+	// Concurrently set different clients as default and read from global functions
+	for i := 0; i < numGoroutines; i++ {
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			for j := 0; j < 50; j++ {
+				// Set a random client as default
+				SetDefaultClient(clients[idx%len(clients)])
+
+				// Read using global function
+				_, _ = GetConfigString("name", "default")
+
+				time.Sleep(time.Microsecond)
+			}
+		}(i)
+	}
+
+	wg.Wait()
+}
+
+// TestNewClientUpdatesDefaultClient verifies that each NewClient call updates the default client.
+func TestNewClientUpdatesDefaultClient(t *testing.T) {
+	ctx := context.Background()
+
+	// Create first client with specific data
+	repo1 := newMockRepository()
+	repo1.data["unique_key"] = "value1"
+	client1, err := NewClient(ctx, repo1, 1*time.Second)
+	if err != nil {
+		t.Fatalf("Failed to create client1: %v", err)
+	}
+	defer client1.Close()
+
+	// Verify global function uses client1
+	val, err := GetConfigString("unique_key", "default")
+	if err != nil {
+		t.Fatalf("Failed to get config: %v", err)
+	}
+	if val != "value1" {
+		t.Errorf("Expected 'value1', got '%s'", val)
+	}
+
+	// Create second client with different data
+	repo2 := newMockRepository()
+	repo2.data["unique_key"] = "value2"
+	client2, err := NewClient(ctx, repo2, 1*time.Second)
+	if err != nil {
+		t.Fatalf("Failed to create client2: %v", err)
+	}
+	defer client2.Close()
+
+	// Verify global function now uses client2 (default was updated)
+	val, err = GetConfigString("unique_key", "default")
+	if err != nil {
+		t.Fatalf("Failed to get config: %v", err)
+	}
+	if val != "value2" {
+		t.Errorf("Expected 'value2' (from updated default client), got '%s'", val)
+	}
+}
+
+// BenchmarkGetConfigString benchmarks the global GetConfigString function
+// to measure the overhead of the mutex protection on defaultClient.
+func BenchmarkGetConfigString(b *testing.B) {
+	repo := newMockRepository()
+	ctx := context.Background()
+	client, err := NewClient(ctx, repo, 1*time.Hour) // Long interval to avoid refresh interference
+	if err != nil {
+		b.Fatalf("Failed to create client: %v", err)
+	}
+	defer client.Close()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _ = GetConfigString("name", "default")
+	}
+}
+
+// BenchmarkGetConfigStringParallel benchmarks concurrent access to GetConfigString.
+func BenchmarkGetConfigStringParallel(b *testing.B) {
+	repo := newMockRepository()
+	ctx := context.Background()
+	client, err := NewClient(ctx, repo, 1*time.Hour)
+	if err != nil {
+		b.Fatalf("Failed to create client: %v", err)
+	}
+	defer client.Close()
+
+	b.ResetTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			_, _ = GetConfigString("name", "default")
+		}
+	})
+}
+
+// BenchmarkClientGetConfigString benchmarks the client method directly (no mutex overhead).
+func BenchmarkClientGetConfigString(b *testing.B) {
+	repo := newMockRepository()
+	ctx := context.Background()
+	client, err := NewClient(ctx, repo, 1*time.Hour)
+	if err != nil {
+		b.Fatalf("Failed to create client: %v", err)
+	}
+	defer client.Close()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _ = client.GetConfigString("name", "default")
+	}
+}
