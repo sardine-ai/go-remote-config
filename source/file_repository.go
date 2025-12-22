@@ -39,25 +39,26 @@ func (f *FileRepository) GetRawData() []byte {
 
 // Refresh reads the YAML file, unmarshal it into the data map.
 func (f *FileRepository) Refresh() error {
-	f.Lock()
-	defer f.Unlock()
-
-	// Read the YAML file
+	// Read the YAML file (no lock needed for read)
 	data, err := os.ReadFile(f.Path)
 	if err != nil {
 		logrus.Debug("error reading file")
 		return err
 	}
 
-	// Unmarshal the YAML data into the data map
-	err = yaml.Unmarshal(data, &f.data)
+	// Unmarshal to temp variable outside lock to prevent data corruption on error
+	var tempData map[string]interface{}
+	err = yaml.Unmarshal(data, &tempData)
 	if err != nil {
 		logrus.Debug("error unmarshalling file")
 		return err
 	}
 
-	// Store the raw data of the YAML file
+	// Only lock for atomic data swap
+	f.Lock()
+	f.data = tempData
 	f.rawData = data
+	f.Unlock()
 
 	return nil
 }
