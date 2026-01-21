@@ -748,6 +748,48 @@ func TestNewClientUpdatesDefaultClient(t *testing.T) {
 	}
 }
 
+// TestNewClientWithOptionsSetAsDefaultFalse verifies that NewClientWithOptions with
+// SetAsDefault: false does NOT change the default client.
+func TestNewClientWithOptionsSetAsDefaultFalse(t *testing.T) {
+	ctx := context.Background()
+
+	// Create first client to establish a default
+	repo1 := newMockRepository()
+	repo1.data["key"] = "first"
+	client1, err := NewClient(ctx, repo1, 1*time.Second)
+	if err != nil {
+		t.Fatalf("Failed to create client1: %v", err)
+	}
+	defer client1.Close()
+
+	// Create second client with SetAsDefault: false
+	repo2 := newMockRepository()
+	repo2.data["key"] = "second"
+	client2, err := NewClientWithOptions(ctx, repo2, 1*time.Second, ClientOptions{SetAsDefault: false})
+	if err != nil {
+		t.Fatalf("Failed to create client2: %v", err)
+	}
+	defer client2.Close()
+
+	// Verify global function still uses client1 (default was NOT updated)
+	val, err := GetConfigString("key", "default")
+	if err != nil {
+		t.Fatalf("Failed to get config: %v", err)
+	}
+	if val != "first" {
+		t.Errorf("Expected 'first' (default should not have changed), got '%s'", val)
+	}
+
+	// Verify client2 instance method works correctly
+	val, err = client2.GetConfigString("key", "default")
+	if err != nil {
+		t.Fatalf("Failed to get config from client2: %v", err)
+	}
+	if val != "second" {
+		t.Errorf("Expected 'second' from client2 instance, got '%s'", val)
+	}
+}
+
 // BenchmarkGetConfigString benchmarks the global GetConfigString function
 // to measure the overhead of the mutex protection on defaultClient.
 func BenchmarkGetConfigString(b *testing.B) {
