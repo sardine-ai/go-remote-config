@@ -38,8 +38,43 @@ var (
 // NewClient creates a new Client with the provided context, repository,
 // and refresh interval. It starts a background goroutine to periodically
 // refresh the configuration data from the repository based on the given
-// refresh interval. The function returns the created Client.
+// refresh interval. The new client is automatically set as the default client.
+// Use NewClientWithOptions if you need more control over this behavior.
 func NewClient(ctx context.Context, repository source.Repository, refreshInterval time.Duration) (*Client, error) {
+	return NewClientWithOptions(ctx, repository, refreshInterval, DefaultClientOptions())
+}
+
+// SetDefaultClient sets the default client to the provided client.
+// This is useful when you want to use a specific client as the default
+// without creating a new one via NewClient. This function is thread-safe.
+func SetDefaultClient(client *Client) {
+	defaultClientMu.Lock()
+	defaultClient = client
+	defaultClientMu.Unlock()
+}
+
+// ClientOptions contains options for creating a new Client.
+type ClientOptions struct {
+	// SetAsDefault determines whether the new client should be set as the
+	// default client for package-level functions like GetConfig().
+	// Defaults to true for backwards compatibility with NewClient().
+	SetAsDefault bool
+}
+
+// DefaultClientOptions returns the default options used by NewClient().
+func DefaultClientOptions() ClientOptions {
+	return ClientOptions{
+		SetAsDefault: true,
+	}
+}
+
+// NewClientWithOptions creates a new Client with the provided context, repository,
+// refresh interval, and options. Unlike NewClient, this function allows you to
+// control whether the new client is set as the default client.
+//
+// Use this when you need multiple independent clients that don't interfere
+// with each other's default client state.
+func NewClientWithOptions(ctx context.Context, repository source.Repository, refreshInterval time.Duration, opts ClientOptions) (*Client, error) {
 	// Create a new context and its corresponding cancel function
 	// for the Client. This allows us to control the lifetime of the
 	// background refresh goroutine.
@@ -49,7 +84,7 @@ func NewClient(ctx context.Context, repository source.Repository, refreshInterva
 	client := &Client{
 		Repository:      repository,
 		RefreshInterval: refreshInterval,
-		cancel:          cancel, // Store the cancel function in the Client struct for later use.
+		cancel:          cancel,
 	}
 
 	// Refresh the configuration data for the first time to ensure the
@@ -62,26 +97,17 @@ func NewClient(ctx context.Context, repository source.Repository, refreshInterva
 	}
 	client.recordRefreshSuccess()
 
-	// Start the background refresh goroutine by calling the refresh function
-	// with the newly created context and the client as arguments.
+	// Start the background refresh goroutine
 	go refresh(ctx, client)
 
-	// Set this client as the default client (thread-safe)
-	defaultClientMu.Lock()
-	defaultClient = client
-	defaultClientMu.Unlock()
+	// Only set as default if requested
+	if opts.SetAsDefault {
+		defaultClientMu.Lock()
+		defaultClient = client
+		defaultClientMu.Unlock()
+	}
 
-	// Return the created Client instance, which is now ready to use.
 	return client, nil
-}
-
-// SetDefaultClient sets the default client to the provided client.
-// This is useful when you want to use a specific client as the default
-// without creating a new one via NewClient. This function is thread-safe.
-func SetDefaultClient(client *Client) {
-	defaultClientMu.Lock()
-	defaultClient = client
-	defaultClientMu.Unlock()
 }
 
 // refresh is a goroutine that periodically refreshes the configuration data
