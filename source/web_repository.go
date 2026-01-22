@@ -18,6 +18,7 @@ type WebRepository struct {
 	data         map[string]interface{} // Map to store the configuration data
 	URL          *url.URL               // URL representing the remote HTTP endpoint (web URL)
 	rawData      []byte                 // Raw data of the YAML configuration file
+	APIKey       string                 // Optional API key for X-API-Key header authentication
 }
 
 // GetName returns the name of the configuration source.
@@ -50,6 +51,11 @@ func (w *WebRepository) Refresh() error {
 	if err != nil {
 		logrus.Debug("error creating request")
 		return err
+	}
+
+	// Set X-API-Key header if API key is configured
+	if w.APIKey != "" {
+		request.Header.Set("X-API-Key", w.APIKey)
 	}
 
 	// Perform the HTTP request to get the YAML file content.
