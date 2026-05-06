@@ -189,10 +189,46 @@ func TestWebRepositoryAPIKeyAuthFailure(t *testing.T) {
 	}
 
 	err := repo.Refresh()
-	// The refresh should succeed (HTTP request completes) but with error response body
-	// which will cause YAML unmarshal to fail since "Unauthorized\n" is not valid YAML
 	if err == nil {
 		t.Error("Expected error with invalid API key")
+	}
+}
+
+// TestWebRepositoryNonOKStatus tests that non-200 responses return an error without wiping cached data
+func TestWebRepositoryNonOKStatus(t *testing.T) {
+	callCount := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		callCount++
+		if callCount == 1 {
+			w.Header().Set("Content-Type", "text/yaml")
+			w.Write([]byte("key: value\n"))
+		} else {
+			http.Error(w, `{"error": "internal server error"}`, http.StatusInternalServerError)
+		}
+	}))
+	defer server.Close()
+
+	serverURL, _ := url.Parse(server.URL)
+	repo := &WebRepository{
+		Name: "test",
+		URL:  serverURL,
+	}
+
+	// First refresh succeeds and populates cache
+	if err := repo.Refresh(); err != nil {
+		t.Fatalf("First refresh failed: %v", err)
+	}
+
+	// Second refresh gets a 500 — should return error and NOT wipe cached data
+	err := repo.Refresh()
+	if err == nil {
+		t.Error("Expected error on 500 response")
+	}
+
+	// Cached data should still be intact
+	val, ok := repo.GetData("key")
+	if !ok || val != "value" {
+		t.Error("Expected cached data to be preserved after failed refresh")
 	}
 }
 
