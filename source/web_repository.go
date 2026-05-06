@@ -2,6 +2,7 @@ package source
 
 import (
 	"context"
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 	"io"
@@ -70,6 +71,10 @@ func (w *WebRepository) Refresh() error {
 			logrus.WithError(err).Debug("error closing response body")
 		}
 	}(resp.Body)
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
 
 	// Read the file content from the response body.
 	data, err := io.ReadAll(resp.Body)

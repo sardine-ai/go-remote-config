@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       localstack:
-        image: localstack/localstack:latest
+        image: localstack/localstack:3
         ports:
           - 4566:4566
         options: >-
@@ -30,7 +30,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
-        go-version: '1.23'
+        go-version: '1.26'
 
     - name: Build
       run: go build -v ./...
@@ -38,7 +38,7 @@ jobs:
     - name: Wait for LocalStack to be ready
       run: |
         for i in {1..30}; do
-          if curl -s http://localhost:4566/_localstack/health | grep "\"s3\": \"running\"" > /dev/null; then
+          if curl -s http://localhost:4566/_localstack/health | grep -E '"s3": "(running|available)"' > /dev/null; then
             echo "LocalStack is ready"
             break
           fi

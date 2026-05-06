@@ -1,8 +1,6 @@
 module github.com/sardine-ai/go-remote-config
 
-go 1.22
-
-toolchain go1.23.1
+go 1.26
 
 require (
 	cloud.google.com/go/storage v1.31.0

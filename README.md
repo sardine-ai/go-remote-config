@@ -3,7 +3,7 @@
 [![Go](https://github.com/sardine-ai/go-remote-config/actions/workflows/go.yml/badge.svg)](https://github.com/sardine-ai/go-remote-config/actions/workflows/go.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/sardine-ai/go-remote-config)](https://goreportcard.com/report/github.com/sardine-ai/go-remote-config)
 [![codecov](https://codecov.io/gh/sardine-ai/go-remote-config/branch/main/graph/badge.svg)](https://codecov.io/gh/sardine-ai/go-remote-config)
-[![Go Version](https://img.shields.io/badge/Go-1.22+-00ADD8?style=flat&logo=go)](https://go.dev/)
+[![Go Version](https://img.shields.io/badge/Go-1.26+-00ADD8?style=flat&logo=go)](https://go.dev/)
 
 A lightweight, thread-safe remote configuration library for Go applications with automatic refresh, multiple backend support, and an optional HTTP server for serving configurations to clients.
 
@@ -50,7 +50,7 @@ go get github.com/sardine-ai/go-remote-config
 
 ## ✅ Requirements
 
-- **Go 1.22+** (toolchain go1.23.1 recommended)
+- **Go 1.26+**
 - For AWS S3: AWS credentials configured (via environment, shared credentials, or IAM role)
 - For GCP Storage: GCP credentials configured (via `GOOGLE_APPLICATION_CREDENTIALS` or default credentials)
 
@@ -383,7 +383,7 @@ database:
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| **Go** | 1.22+ | Core language |
+| **Go** | 1.26+ | Core language |
 | **cloud.google.com/go/storage** | v1.31.0 | GCP Cloud Storage client |
 | **aws-sdk-go-v2** | v1.32.2 | AWS S3 client |
 | **go-git/go-git** | v5.8.1 | Git repository operations |
