@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"net/url"
 	"os"
@@ -607,6 +608,51 @@ func TestGetConfigAfterCloseReturnsDefault(t *testing.T) {
 	}
 	if !reflect.DeepEqual(arrVal, []string{"default"}) {
 		t.Errorf("Expected ['default'], got %v", arrVal)
+	}
+}
+
+// TestGetConfigNotFoundIsErrConfigNotFound verifies callers can detect a
+// missing config key via errors.Is(err, ErrConfigNotFound), including
+// through a wrapping layer (fmt.Errorf + %w), rather than matching on
+// the error string.
+func TestGetConfigNotFoundIsErrConfigNotFound(t *testing.T) {
+	repo := newMockRepository()
+	ctx := context.Background()
+	client, err := NewClient(ctx, repo, 1*time.Second)
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+	defer client.Close()
+
+	var out string
+	err = client.GetConfig("missing_key", &out, "default")
+	if !errors.Is(err, ErrConfigNotFound) {
+		t.Errorf("Expected errors.Is(err, ErrConfigNotFound) to be true, got err=%v", err)
+	}
+
+	wrapped := fmt.Errorf("failed to load config: %w", err)
+	if !errors.Is(wrapped, ErrConfigNotFound) {
+		t.Errorf("Expected errors.Is(wrapped, ErrConfigNotFound) to be true, got err=%v", wrapped)
+	}
+
+	_, err = client.GetConfigString("missing_key", "default")
+	if !errors.Is(err, ErrConfigNotFound) {
+		t.Errorf("Expected errors.Is(err, ErrConfigNotFound) to be true, got err=%v", err)
+	}
+
+	_, err = client.GetConfigInt("missing_key", 0)
+	if !errors.Is(err, ErrConfigNotFound) {
+		t.Errorf("Expected errors.Is(err, ErrConfigNotFound) to be true, got err=%v", err)
+	}
+
+	_, err = client.GetConfigFloat("missing_key", 0)
+	if !errors.Is(err, ErrConfigNotFound) {
+		t.Errorf("Expected errors.Is(err, ErrConfigNotFound) to be true, got err=%v", err)
+	}
+
+	_, err = client.GetConfigArrayOfStrings("missing_key", nil)
+	if !errors.Is(err, ErrConfigNotFound) {
+		t.Errorf("Expected errors.Is(err, ErrConfigNotFound) to be true, got err=%v", err)
 	}
 }
 

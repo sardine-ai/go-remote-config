@@ -35,6 +35,11 @@ var (
 	defaultClientMu sync.RWMutex
 )
 
+// ErrConfigNotFound is returned when a requested config key does not exist
+// in the repository. Callers should use errors.Is(err, client.ErrConfigNotFound)
+// to detect this case rather than matching on the error string.
+var ErrConfigNotFound = errors.New("config not found")
+
 // NewClient creates a new Client with the provided context, repository,
 // and refresh interval. It starts a background goroutine to periodically
 // refresh the configuration data from the repository based on the given
@@ -290,7 +295,7 @@ func (c *Client) GetConfig(name string, data interface{}, defaultValue interface
 	config, ok := c.Repository.GetData(name)
 	if !ok {
 		setDefaultValue(data, defaultValue)
-		return errors.New("config not found")
+		return ErrConfigNotFound
 	}
 
 	marshal, err := yaml.Marshal(config)
@@ -316,7 +321,7 @@ func (c *Client) GetConfigArrayOfStrings(name string, defaultValue []string) ([]
 	// Get the configuration data from the repository
 	config, ok := c.Repository.GetData(name)
 	if !ok {
-		return defaultValue, errors.New("config not found")
+		return defaultValue, ErrConfigNotFound
 	}
 
 	configArray, ok := config.([]interface{})
@@ -343,7 +348,7 @@ func (c *Client) GetConfigString(name string, defaultValue string) (string, erro
 	// Get the configuration data from the repository
 	config, ok := c.Repository.GetData(name)
 	if !ok {
-		return defaultValue, errors.New("config not found")
+		return defaultValue, ErrConfigNotFound
 	}
 
 	configString, ok := config.(string)
@@ -362,7 +367,7 @@ func (c *Client) GetConfigInt(name string, defaultValue int) (int, error) {
 	// Get the configuration data from the repository
 	config, ok := c.Repository.GetData(name)
 	if !ok {
-		return defaultValue, errors.New("config not found")
+		return defaultValue, ErrConfigNotFound
 	}
 	configInt, ok := config.(int)
 	if !ok {
@@ -380,7 +385,7 @@ func (c *Client) GetConfigFloat(name string, defaultValue float64) (float64, err
 	// Get the configuration data from the repository
 	config, ok := c.Repository.GetData(name)
 	if !ok {
-		return defaultValue, errors.New("config not found")
+		return defaultValue, ErrConfigNotFound
 	}
 	configInt, ok := config.(float64)
 	if !ok {
