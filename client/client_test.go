@@ -269,7 +269,8 @@ func TestRefresh(t *testing.T) {
 	if count != 0 {
 		t.Errorf("Expected count to be 0, got %d", count)
 	}
-	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
 	refresh(ctx, client)
 	if client.GetConfig("test", &count, nil) != nil {
 		t.Errorf("Expected error, got nil")
