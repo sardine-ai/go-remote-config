@@ -10,34 +10,22 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// GetConfig converts the repository's decoded value into the caller's type
-// via a YAML round-trip. That conversion is deterministic for a given
-// (config name, target type, source value), so it is done once and cached;
-// later calls only copy the cached result. The cache is rebuilt by the
-// background refresh loop after each successful refresh.
-//
-// Backward compatibility is the priority: whenever the cached path could
-// behave differently from the original per-call conversion (conversion errors,
-// non-pointer or non-empty targets, types that cannot be copied faithfully)
-// GetConfig runs the original YAML code instead.
-//
-// The cache relies on the source.Repository contract that GetData values are
-// never mutated in place: a refresh publishes a new map/slice, which sameSource
-// detects by identity.
+// GetConfig conversions are cached per (name, type, source value).
+// Falls back to the original YAML path whenever the cache could differ from it.
+// Assumes GetData values are never mutated in place; see source.Repository.
 
 type cacheKey struct {
 	name string
-	typ  reflect.Type // type of the pointer passed to GetConfig
+	typ  reflect.Type // pointer type passed to GetConfig
 }
 
 // cacheEntry is immutable once stored.
 type cacheEntry struct {
-	src interface{} // repository value the entry was built from
-	val interface{} // converted value of the pointed-to type; never handed out directly
+	src interface{} // source value the entry was built from
+	val interface{} // converted value; never handed out directly
 }
 
-// sameSource reports whether a and b are the same repository value: the same
-// map/slice object, or equal scalars.
+// sameSource reports whether a and b are the same source value.
 func sameSource(a, b interface{}) (same bool) {
 	defer func() {
 		if recover() != nil {
@@ -58,9 +46,7 @@ func sameSource(a, b interface{}) (same bool) {
 	return a == b
 }
 
-// buildEntry runs the original conversion once. It returns false when the
-// result must not be cached: any conversion error, or a value deepcopy cannot
-// reproduce exactly (e.g. unexported fields, NaN).
+// buildEntry runs the YAML conversion once; false if it must not be cached.
 func buildEntry(src interface{}, ptrType reflect.Type) (*cacheEntry, bool) {
 	ptr := reflect.New(ptrType.Elem())
 	marshal, err := yaml.Marshal(src)
@@ -77,8 +63,7 @@ func buildEntry(src interface{}, ptrType reflect.Type) (*cacheEntry, bool) {
 	return &cacheEntry{src: src, val: val}, true
 }
 
-// copiesFaithfully reports whether deepcopy reproduces val exactly. deepcopy
-// panics on some values (e.g. a nil map key), which also means "no".
+// copiesFaithfully reports whether deepcopy reproduces val exactly.
 func copiesFaithfully(val interface{}) (ok bool) {
 	defer func() {
 		if recover() != nil {
@@ -88,8 +73,7 @@ func copiesFaithfully(val interface{}) (ok bool) {
 	return reflect.DeepEqual(deepcopy.Copy(val), val)
 }
 
-// getOrBuild returns the entry for (name, type) for the given source value,
-// rebuilding it when the repository value changed.
+// getOrBuild returns the entry for (name, type), rebuilding if src changed.
 func (c *Client) getOrBuild(name string, src interface{}, ptrType reflect.Type) (*cacheEntry, bool) {
 	key := cacheKey{name, ptrType}
 	if v, ok := c.cache.Load(key); ok {
@@ -106,16 +90,14 @@ func (c *Client) getOrBuild(name string, src interface{}, ptrType reflect.Type) 
 	return e, true
 }
 
-// serveFromCache fills data from the cache. It returns false when the call
-// must take the original conversion path.
+// serveFromCache fills data from the cache; false means use the original path.
 func (c *Client) serveFromCache(name string, config interface{}, data interface{}) bool {
 	dv := reflect.ValueOf(data)
 	if dv.Kind() != reflect.Ptr || dv.IsNil() {
 		return false
 	}
 	target := dv.Elem()
-	// YAML merges into a non-empty map and keeps other existing state; leave
-	// every target that is not zero or an empty map/slice to the original path.
+	// YAML merges into non-empty targets; leave them to the original path.
 	if !target.IsZero() && !isEmptyContainer(target) {
 		return false
 	}
@@ -133,14 +115,14 @@ func isEmptyContainer(v reflect.Value) bool {
 
 // copyInto stores an independent copy of val in target.
 func copyInto(target reflect.Value, val interface{}) {
-	// Hot types without reflection. Exact types only; named types use deepcopy.
+	// fast paths for exact common types; others use deepcopy
 	switch v := val.(type) {
 	case map[string]string:
 		if t, ok := target.Addr().Interface().(*map[string]string); ok {
 			if *t == nil || v == nil {
 				*t = maps.Clone(v)
 			} else {
-				maps.Copy(*t, v) // empty non-nil target: fill it, as yaml does
+				maps.Copy(*t, v) // empty non-nil target: fill in place, as yaml does
 			}
 			return
 		}
@@ -157,7 +139,7 @@ func copyInto(target reflect.Value, val interface{}) {
 	}
 	cp := reflect.ValueOf(deepcopy.Copy(val))
 	if target.Kind() == reflect.Map && !target.IsNil() && !cp.IsNil() {
-		// Empty non-nil target map: fill it in place, as yaml does.
+		// empty non-nil target: fill in place, as yaml does
 		for it := cp.MapRange(); it.Next(); {
 			target.SetMapIndex(it.Key(), it.Value())
 		}
@@ -166,8 +148,7 @@ func copyInto(target reflect.Value, val interface{}) {
 	target.Set(cp)
 }
 
-// rebuildCache re-converts every cached entry whose repository value changed.
-// It runs on the refresh goroutine so live GetConfig calls rarely do it.
+// rebuildCache re-converts cached entries whose source changed.
 func (c *Client) rebuildCache() {
 	c.cache.Range(func(k, v interface{}) bool {
 		key := k.(cacheKey)

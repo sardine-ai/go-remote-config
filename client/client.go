@@ -29,7 +29,7 @@ type Client struct {
 	refreshCount    int64
 	refreshErrors   int64
 
-	// cache holds GetConfig conversions, keyed by cacheKey. See cache.go.
+	// cache holds GetConfig conversions; see cache.go
 	cache sync.Map
 }
 
@@ -309,8 +309,7 @@ func (c *Client) GetConfig(name string, data interface{}, defaultValue interface
 	return convertConfig(config, data, defaultValue)
 }
 
-// convertConfig is the original per-call conversion: re-serialize the decoded
-// config to YAML and parse it into the caller's pointer.
+// convertConfig is the original per-call YAML conversion.
 func convertConfig(config interface{}, data interface{}, defaultValue interface{}) error {
 	marshal, err := yaml.Marshal(config)
 	if err != nil {
