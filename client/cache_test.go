@@ -96,6 +96,10 @@ func TestGetConfigReusesCachedEntry(t *testing.T) {
 		t.Fatal(err)
 	}
 	key := cacheKey{"str_map", reflect.TypeOf(&a)}
+	c.rebuildCache() // a miss registers the key; the refresh goroutine builds it
+	if err := c.GetConfig("str_map", &a, nil); err != nil {
+		t.Fatal(err)
+	}
 	first, _ := c.cache.Load(key)
 	if err := c.GetConfig("str_map", &b, nil); err != nil {
 		t.Fatal(err)
@@ -228,6 +232,7 @@ func TestGetConfigFallsBackToOriginalConversion(t *testing.T) {
 	if err := mc.GetConfig("m", &out, nil); err != nil || out["a"] != "b" {
 		t.Fatal(err, out)
 	}
+	mc.rebuildCache()
 	if cacheLen(mc) != 1 {
 		t.Fatal("custom repositories are cached too")
 	}
@@ -306,6 +311,9 @@ func benchmarkConfig(n int) string {
 func BenchmarkGetConfigMapStringString(b *testing.B) {
 	c, _, _ := newFileClient(b, benchmarkConfig(200))
 	b.ReportAllocs()
+	var warm map[string]string
+	_ = c.GetConfig("models", &warm, nil) // register the key
+	c.rebuildCache()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		var out map[string]string
@@ -318,6 +326,9 @@ func BenchmarkGetConfigMapStringString(b *testing.B) {
 func BenchmarkGetConfigStructMap(b *testing.B) {
 	c, _, _ := newFileClient(b, benchmarkConfig(200))
 	b.ReportAllocs()
+	var warm map[string]cacheSLA
+	_ = c.GetConfig("sla", &warm, nil) // register the key
+	c.rebuildCache()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		var out map[string]cacheSLA
@@ -448,6 +459,9 @@ func TestGetConfigTweakpointShapeThroughWrapper(t *testing.T) {
 		if err := convertConfig(cfg, &want, nil); err != nil {
 			t.Fatal(err)
 		}
+		var warm tpConfig
+		_ = c.GetConfig(key, &warm, nil) // register the key
+		c.rebuildCache()
 		for call := 0; call < 3; call++ {
 			var got tpConfig
 			if err := c.GetConfig(key, &got, nil); err != nil || !reflect.DeepEqual(got, want) {
@@ -481,6 +495,9 @@ func BenchmarkGetConfigTweakpointShape(b *testing.B) {
 	_, repo, _ := newFileClient(b, tpYAML)
 	c := &Client{Repository: wrapper{repo}}
 	b.ReportAllocs()
+	var warm tpConfig
+	_ = c.GetConfig("feature_a", &warm, nil) // register the key
+	c.rebuildCache()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		var out tpConfig
@@ -516,8 +533,13 @@ func TestGetConfigWebRepositoryBehindDecoratorWithRefreshLoop(t *testing.T) {
 		t.Fatalf("%v %#v", err, cfg)
 	}
 	key := cacheKey{"feature_a", reflect.TypeOf(&cfg)}
-	if _, ok := c.cache.Load(key); !ok {
-		t.Fatal("expected the entry to be cached")
+	for start := time.Now(); ; time.Sleep(5 * time.Millisecond) {
+		if _, ok := c.cache.Load(key); ok {
+			break
+		}
+		if time.Since(start) > 5*time.Second {
+			t.Fatal("refresh goroutine did not build the entry")
+		}
 	}
 
 	mu.Lock()
@@ -545,5 +567,26 @@ func TestGetConfigWebRepositoryBehindDecoratorWithRefreshLoop(t *testing.T) {
 		_ = c.GetConfig("feature_a", &out, nil)
 	}); allocs > 40 {
 		t.Fatalf("expected the cached path, got %.0f allocs per call", allocs)
+	}
+}
+
+func TestGetConfigMissDoesNotBuildInline(t *testing.T) {
+	c, _, _ := newFileClient(t, cacheTestYAML)
+	c.rebuildCh = make(chan struct{}, 1)
+	var m map[string]string
+	if err := c.GetConfig("str_map", &m, nil); err != nil || m["a"] != "1" {
+		t.Fatalf("%v %v", err, m)
+	}
+	if cacheLen(c) != 0 {
+		t.Fatal("GetConfig must not store entries; only the refresh goroutine does")
+	}
+	select {
+	case <-c.rebuildCh:
+	default:
+		t.Fatal("first miss should wake the refresh goroutine")
+	}
+	c.rebuildCache()
+	if cacheLen(c) != 1 {
+		t.Fatal("rebuildCache should build the registered key")
 	}
 }
