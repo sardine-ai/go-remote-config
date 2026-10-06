@@ -11,9 +11,7 @@ import (
 )
 
 // GetConfig conversions are cached per (name, type, source value).
-// Only the refresh goroutine builds entries; on a miss GetConfig registers the
-// key and uses the original YAML path, as it does whenever the cache could
-// differ from it.
+// Falls back to the original YAML path whenever the cache could differ from it.
 // Assumes GetData values are never mutated in place; see source.Repository.
 
 type cacheKey struct {
@@ -75,24 +73,21 @@ func copiesFaithfully(val interface{}) (ok bool) {
 	return reflect.DeepEqual(deepcopy.Copy(val), val)
 }
 
-// lookup returns the cached entry for (name, type) if it matches src.
-// On a miss it registers the key for the refresh goroutine and returns false.
-func (c *Client) lookup(name string, src interface{}, ptrType reflect.Type) (*cacheEntry, bool) {
+// getOrBuild returns the entry for (name, type), rebuilding if src changed.
+func (c *Client) getOrBuild(name string, src interface{}, ptrType reflect.Type) (*cacheEntry, bool) {
 	key := cacheKey{name, ptrType}
 	if v, ok := c.cache.Load(key); ok {
 		if e := v.(*cacheEntry); sameSource(e.src, src) {
 			return e, true
 		}
 	}
-	if _, ok := c.wanted.Load(key); !ok {
-		if _, loaded := c.wanted.LoadOrStore(key, struct{}{}); !loaded {
-			select {
-			case c.rebuildCh <- struct{}{}:
-			default:
-			}
-		}
+	e, ok := buildEntry(src, ptrType)
+	if !ok {
+		c.cache.Delete(key)
+		return nil, false
 	}
-	return nil, false
+	c.cache.Store(key, e)
+	return e, true
 }
 
 // serveFromCache fills data from the cache; false means use the original path.
@@ -106,7 +101,7 @@ func (c *Client) serveFromCache(name string, config interface{}, data interface{
 	if !target.IsZero() && !isEmptyContainer(target) {
 		return false
 	}
-	e, ok := c.lookup(name, config, dv.Type())
+	e, ok := c.getOrBuild(name, config, dv.Type())
 	if !ok {
 		return false
 	}
@@ -153,17 +148,16 @@ func copyInto(target reflect.Value, val interface{}) {
 	target.Set(cp)
 }
 
-// rebuildCache re-converts wanted entries whose source changed.
-// It runs only on the refresh goroutine, the single writer of c.cache.
+// rebuildCache re-converts cached entries whose source changed.
 func (c *Client) rebuildCache() {
-	c.wanted.Range(func(k, _ interface{}) bool {
+	c.cache.Range(func(k, v interface{}) bool {
 		key := k.(cacheKey)
 		src, ok := c.Repository.GetData(key.name)
 		if !ok {
 			c.cache.Delete(key)
 			return true
 		}
-		if v, ok := c.cache.Load(key); ok && sameSource(v.(*cacheEntry).src, src) {
+		if sameSource(v.(*cacheEntry).src, src) {
 			return true
 		}
 		c.rebuildEntry(key, src)

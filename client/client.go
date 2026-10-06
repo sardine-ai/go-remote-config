@@ -31,9 +31,6 @@ type Client struct {
 
 	// cache holds GetConfig conversions; see cache.go
 	cache sync.Map
-	// wanted holds the cache keys GetConfig has requested; rebuildCh wakes the refresh goroutine
-	wanted    sync.Map
-	rebuildCh chan struct{}
 }
 
 var (
@@ -96,7 +93,6 @@ func NewClientWithOptions(ctx context.Context, repository source.Repository, ref
 		Repository:      repository,
 		RefreshInterval: refreshInterval,
 		cancel:          cancel,
-		rebuildCh:       make(chan struct{}, 1),
 	}
 
 	// Refresh the configuration data for the first time to ensure the
@@ -140,8 +136,6 @@ func refresh(ctx context.Context, client *Client) {
 				client.recordRefreshSuccess()
 				client.rebuildCache()
 			}
-		case <-client.rebuildCh:
-			client.rebuildCache()
 		case <-ctx.Done():
 			// The context is canceled, indicating the refresh routine should stop
 			return
