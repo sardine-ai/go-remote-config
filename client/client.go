@@ -28,6 +28,9 @@ type Client struct {
 	lastRefreshErr  error
 	refreshCount    int64
 	refreshErrors   int64
+
+	// cache holds GetConfig conversions; see cache.go
+	cache sync.Map
 }
 
 var (
@@ -131,6 +134,7 @@ func refresh(ctx context.Context, client *Client) {
 				client.recordRefreshError(err)
 			} else {
 				client.recordRefreshSuccess()
+				client.rebuildCache()
 			}
 		case <-ctx.Done():
 			// The context is canceled, indicating the refresh routine should stop
@@ -286,6 +290,7 @@ func setDefaultValue(data interface{}, defaultValue interface{}) {
 // and stores it in the provided data pointer. It returns an error if the
 // configuration is not found, the data argument is not a non-nil pointer, or
 // the type of the data is not compatible with the type in the repository.
+// The result is an independent copy; the caller may modify it freely.
 func (c *Client) GetConfig(name string, data interface{}, defaultValue interface{}) error {
 	if c.closed.Load() {
 		setDefaultValue(data, defaultValue)
@@ -298,6 +303,14 @@ func (c *Client) GetConfig(name string, data interface{}, defaultValue interface
 		return ErrConfigNotFound
 	}
 
+	if c.serveFromCache(name, config, data) {
+		return nil
+	}
+	return convertConfig(config, data, defaultValue)
+}
+
+// convertConfig is the original per-call YAML conversion.
+func convertConfig(config interface{}, data interface{}, defaultValue interface{}) error {
 	marshal, err := yaml.Marshal(config)
 	if err != nil {
 		setDefaultValue(data, defaultValue)

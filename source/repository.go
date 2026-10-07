@@ -6,6 +6,9 @@ package source
 type Repository interface {
 	GetName() string
 	// GetData returns the configuration data as a map of configuration names to their respective models.
+	//
+	// Returned values must be immutable: publish new map/slice values on
+	// change, never edit in place.
 	GetData(string) (interface{}, bool)
 
 	// GetRawData returns the raw data of the configuration file.
