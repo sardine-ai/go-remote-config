@@ -327,23 +327,20 @@ func BenchmarkGetConfigStructMap(b *testing.B) {
 	}
 }
 
-// A value deepcopy cannot reproduce exactly (NaN != NaN) is not cached and
-// still converts exactly like the original path.
-func TestGetConfigUncopyableValueUsesOriginalConversion(t *testing.T) {
-	c, repo, _ := newFileClient(t, "nan: {a: .nan, b: 1.5}\n")
-	cfg, _ := repo.GetData("nan")
-	var got, want map[string]float64
-	if err := c.GetConfig("nan", &got, nil); err != nil {
-		t.Fatal(err)
+// NaN values are cached and served like the original conversion.
+func TestGetConfigNaNValueIsCached(t *testing.T) {
+	c, _, _ := newFileClient(t, "nan: {a: .nan, b: 1.5}\n")
+	for call := 0; call < 2; call++ {
+		var got map[string]float64
+		if err := c.GetConfig("nan", &got, nil); err != nil {
+			t.Fatal(err)
+		}
+		if len(got) != 2 || got["b"] != 1.5 || got["a"] == got["a"] {
+			t.Fatalf("call %d: got %v", call, got)
+		}
 	}
-	if err := convertConfig(cfg, &want, nil); err != nil {
-		t.Fatal(err)
-	}
-	if len(got) != 2 || got["b"] != 1.5 || got["a"] == got["a"] || want["a"] == want["a"] {
-		t.Fatalf("got %v want %v", got, want)
-	}
-	if cacheLen(c) != 0 {
-		t.Fatal("uncopyable value must not be cached")
+	if cacheLen(c) != 1 {
+		t.Fatal("NaN value should be cached")
 	}
 }
 
@@ -384,23 +381,25 @@ func TestSameSource(t *testing.T) {
 	}
 }
 
-// deepcopy panics on a nil map key; that must fall back to the original
-// conversion, not panic out of GetConfig.
-func TestGetConfigNilMapKeyUsesOriginalConversion(t *testing.T) {
+// A nil map key is cached and served like the original conversion.
+func TestGetConfigNilMapKeyIsCached(t *testing.T) {
 	c, repo, _ := newFileClient(t, "nullkey: {null: x, a: y}\n")
 	cfg, _ := repo.GetData("nullkey")
-	var got, want map[interface{}]interface{}
-	if err := c.GetConfig("nullkey", &got, nil); err != nil {
-		t.Fatal(err)
-	}
+	var want map[interface{}]interface{}
 	if err := convertConfig(cfg, &want, nil); err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(got, want) || len(got) != 2 {
-		t.Fatalf("got %v want %v", got, want)
+	for call := 0; call < 2; call++ {
+		var got map[interface{}]interface{}
+		if err := c.GetConfig("nullkey", &got, nil); err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(got, want) || len(got) != 2 {
+			t.Fatalf("call %d: got %v want %v", call, got, want)
+		}
 	}
-	if cacheLen(c) != 0 {
-		t.Fatal("value deepcopy cannot copy must not be cached")
+	if cacheLen(c) != 1 {
+		t.Fatal("nil map key value should be cached")
 	}
 }
 

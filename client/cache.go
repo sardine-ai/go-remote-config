@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"slices"
 
-	"github.com/mohae/deepcopy"
+	clone "github.com/huandu/go-clone"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 )
@@ -56,21 +56,7 @@ func buildEntry(src interface{}, ptrType reflect.Type) (*cacheEntry, bool) {
 	if err := yaml.Unmarshal(marshal, ptr.Interface()); err != nil {
 		return nil, false
 	}
-	val := ptr.Elem().Interface()
-	if !copiesFaithfully(val) {
-		return nil, false
-	}
-	return &cacheEntry{src: src, val: val}, true
-}
-
-// copiesFaithfully reports whether deepcopy reproduces val exactly.
-func copiesFaithfully(val interface{}) (ok bool) {
-	defer func() {
-		if recover() != nil {
-			ok = false
-		}
-	}()
-	return reflect.DeepEqual(deepcopy.Copy(val), val)
+	return &cacheEntry{src: src, val: ptr.Elem().Interface()}, true
 }
 
 // getOrBuild returns the entry for (name, type), rebuilding if src changed.
@@ -115,7 +101,7 @@ func isEmptyContainer(v reflect.Value) bool {
 
 // copyInto stores an independent copy of val in target.
 func copyInto(target reflect.Value, val interface{}) {
-	// fast paths for exact common types; others use deepcopy
+	// fast paths for exact common types; others use clone
 	switch v := val.(type) {
 	case map[string]string:
 		if t, ok := target.Addr().Interface().(*map[string]string); ok {
@@ -137,7 +123,7 @@ func copyInto(target reflect.Value, val interface{}) {
 		target.Set(reflect.Zero(target.Type()))
 		return
 	}
-	cp := reflect.ValueOf(deepcopy.Copy(val))
+	cp := reflect.ValueOf(clone.Clone(val))
 	if target.Kind() == reflect.Map && !target.IsNil() && !cp.IsNil() {
 		// empty non-nil target: fill in place, as yaml does
 		for it := cp.MapRange(); it.Next(); {
