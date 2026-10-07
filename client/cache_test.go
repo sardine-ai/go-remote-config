@@ -403,25 +403,25 @@ func TestGetConfigNilMapKeyIsCached(t *testing.T) {
 	}
 }
 
-// wrapper mimics a decorator such as tweakpoint's instrumentedRepository.
+// wrapper mimics a decorator around a repository, e.g. one that adds metrics.
 type wrapper struct{ source.Repository }
 
-// Mirrors sardine-all's tweakpoint client: a struct with `any` fields and a
-// map of unexported override structs, read through a wrapped WebRepository-style repo.
-type tpOverride struct {
+// featureConfig is a struct with `any` fields and a map of override structs,
+// read through a wrapped repository.
+type featureOverride struct {
 	Value        any  `yaml:"value"`
 	InheritValue bool `yaml:"inherit_value"`
 }
 
-type tpConfig struct {
-	Type          string                `yaml:"type"`
-	DefaultValue  any                   `yaml:"default_value"`
-	AllowedValues []string              `yaml:"allowed_values,omitempty"`
-	Visibility    string                `yaml:"visibility"`
-	Overrides     map[string]tpOverride `yaml:"overrides,omitempty"`
+type featureConfig struct {
+	Type          string                     `yaml:"type"`
+	DefaultValue  any                        `yaml:"default_value"`
+	AllowedValues []string                   `yaml:"allowed_values,omitempty"`
+	Visibility    string                     `yaml:"visibility"`
+	Overrides     map[string]featureOverride `yaml:"overrides,omitempty"`
 }
 
-const tpYAML = `
+const featureYAML = `
 feature_a:
   type: bool
   default_value: false
@@ -438,22 +438,22 @@ limits:
     client-1: {value: {a: 9, b: [z]}, inherit_value: true}
 `
 
-func TestGetConfigTweakpointShapeThroughWrapper(t *testing.T) {
-	_, repo, path := newFileClient(t, tpYAML)
+func TestGetConfigStructWithAnyFieldsThroughWrapper(t *testing.T) {
+	_, repo, path := newFileClient(t, featureYAML)
 	c := &Client{Repository: wrapper{repo}}
 	for _, key := range []string{"feature_a", "limits"} {
 		cfg, _ := repo.GetData(key)
-		var want tpConfig
+		var want featureConfig
 		if err := convertConfig(cfg, &want, nil); err != nil {
 			t.Fatal(err)
 		}
 		for call := 0; call < 3; call++ {
-			var got tpConfig
+			var got featureConfig
 			if err := c.GetConfig(key, &got, nil); err != nil || !reflect.DeepEqual(got, want) {
 				t.Fatalf("%s call %d: %v\n got  %#v\n want %#v", key, call, err, got, want)
 			}
 			// mutate everything reachable, including `any` payloads
-			got.Overrides["client-1"] = tpOverride{Value: "X"}
+			got.Overrides["client-1"] = featureOverride{Value: "X"}
 			if m, ok := got.DefaultValue.(map[string]interface{}); ok {
 				m["a"] = "X"
 				m["b"].([]interface{})[0] = "X"
@@ -470,30 +470,30 @@ func TestGetConfigTweakpointShapeThroughWrapper(t *testing.T) {
 	// refresh through the wrapper is picked up
 	rewrite(t, repo, path, "feature_a: {type: bool, default_value: true, visibility: x}\n")
 	c.rebuildCache()
-	var after tpConfig
+	var after featureConfig
 	if err := c.GetConfig("feature_a", &after, nil); err != nil || after.DefaultValue != true || len(after.Overrides) != 0 {
 		t.Fatalf("%v %#v", err, after)
 	}
 }
 
-func BenchmarkGetConfigTweakpointShape(b *testing.B) {
-	_, repo, _ := newFileClient(b, tpYAML)
+func BenchmarkGetConfigStructWithAnyFields(b *testing.B) {
+	_, repo, _ := newFileClient(b, featureYAML)
 	c := &Client{Repository: wrapper{repo}}
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		var out tpConfig
+		var out featureConfig
 		if err := c.GetConfig("feature_a", &out, nil); err != nil || len(out.Overrides) != 2 {
 			b.Fatal(err)
 		}
 	}
 }
 
-// End to end in the shape tweakpoint uses: a WebRepository behind a decorator,
+// End to end: a WebRepository behind a decorator,
 // refreshed by the client's background loop while GetConfig is served.
 func TestGetConfigWebRepositoryBehindDecoratorWithRefreshLoop(t *testing.T) {
 	var mu sync.Mutex
-	body := tpYAML
+	body := featureYAML
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		mu.Lock()
 		defer mu.Unlock()
@@ -510,7 +510,7 @@ func TestGetConfigWebRepositoryBehindDecoratorWithRefreshLoop(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var cfg tpConfig
+	var cfg featureConfig
 	if err := c.GetConfig("feature_a", &cfg, nil); err != nil || cfg.DefaultValue != false || len(cfg.Overrides) != 2 {
 		t.Fatalf("%v %#v", err, cfg)
 	}
@@ -527,7 +527,7 @@ func TestGetConfigWebRepositoryBehindDecoratorWithRefreshLoop(t *testing.T) {
 	deadline := time.Now().Add(5 * time.Second)
 	for {
 		src, _ := web.GetData("feature_a")
-		if v, ok := c.cache.Load(key); ok && sameSource(v.(*cacheEntry).src, src) && v.(*cacheEntry).val.(tpConfig).DefaultValue == true {
+		if v, ok := c.cache.Load(key); ok && sameSource(v.(*cacheEntry).src, src) && v.(*cacheEntry).val.(featureConfig).DefaultValue == true {
 			break
 		}
 		if time.Now().After(deadline) {
@@ -535,12 +535,12 @@ func TestGetConfigWebRepositoryBehindDecoratorWithRefreshLoop(t *testing.T) {
 		}
 		time.Sleep(5 * time.Millisecond)
 	}
-	var after tpConfig
+	var after featureConfig
 	if err := c.GetConfig("feature_a", &after, nil); err != nil || after.DefaultValue != true || len(after.Overrides) != 1 {
 		t.Fatalf("%v %#v", err, after)
 	}
 	if allocs := testing.AllocsPerRun(100, func() {
-		var out tpConfig
+		var out featureConfig
 		_ = c.GetConfig("feature_a", &out, nil)
 	}); allocs > 40 {
 		t.Fatalf("expected the cached path, got %.0f allocs per call", allocs)
